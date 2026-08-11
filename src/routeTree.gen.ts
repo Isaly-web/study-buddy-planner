@@ -9,30 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as SharedTokenRouteImport } from './routes/shared.$token'
-import { Route as ApiLessonAudioRouteImport } from './routes/api/lesson-audio'
-import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedStatsRouteImport } from './routes/_authenticated/stats'
+import { Route as ApiLessonAudioRouteImport } from './routes/api/lesson-audio'
+import { Route as SharedTokenRouteImport } from './routes/shared.$token'
+import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
+import { Route as AuthenticatedExamNewRouteImport } from './routes/_authenticated/exam.new'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
-import { Route as AuthenticatedExamNewRouteImport } from './routes/_authenticated/exam.new'
-import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authenticated/exam.$examId'
 
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
+  id: '/stats',
+  path: '/stats',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiLessonAudioRoute = ApiLessonAudioRouteImport.update({
+  id: '/api/lesson-audio',
+  path: '/api/lesson-audio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SharedTokenRoute = SharedTokenRouteImport.update({
@@ -40,19 +55,14 @@ const SharedTokenRoute = SharedTokenRouteImport.update({
   path: '/shared/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiLessonAudioRoute = ApiLessonAudioRouteImport.update({
-  id: '/api/lesson-audio',
-  path: '/api/lesson-audio',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedStatsRoute = AuthenticatedStatsRouteImport.update({
-  id: '/stats',
-  path: '/stats',
+const AuthenticatedExamExamIdRoute = AuthenticatedExamExamIdRouteImport.update({
+  id: '/exam/$examId',
+  path: '/exam/$examId',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
+const AuthenticatedExamNewRoute = AuthenticatedExamNewRouteImport.update({
+  id: '/exam/new',
+  path: '/exam/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedFeedbackIndexRoute =
@@ -64,16 +74,6 @@ const AuthenticatedFeedbackIndexRoute =
 const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
   id: '/feedback/$id',
   path: '/feedback/$id',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedExamNewRoute = AuthenticatedExamNewRouteImport.update({
-  id: '/exam/new',
-  path: '/exam/new',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedExamExamIdRoute = AuthenticatedExamExamIdRouteImport.update({
-  id: '/exam/$examId',
-  path: '/exam/$examId',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
@@ -165,11 +165,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -179,11 +179,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/stats': {
+      id: '/_authenticated/stats'
+      path: '/stats'
+      fullPath: '/stats'
+      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/lesson-audio': {
+      id: '/api/lesson-audio'
+      path: '/api/lesson-audio'
+      fullPath: '/api/lesson-audio'
+      preLoaderRoute: typeof ApiLessonAudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shared/$token': {
@@ -193,25 +214,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SharedTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/lesson-audio': {
-      id: '/api/lesson-audio'
-      path: '/api/lesson-audio'
-      fullPath: '/api/lesson-audio'
-      preLoaderRoute: typeof ApiLessonAudioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/stats': {
-      id: '/_authenticated/stats'
-      path: '/stats'
-      fullPath: '/stats'
-      preLoaderRoute: typeof AuthenticatedStatsRouteImport
+    '/_authenticated/exam/$examId': {
+      id: '/_authenticated/exam/$examId'
+      path: '/exam/$examId'
+      fullPath: '/exam/$examId'
+      preLoaderRoute: typeof AuthenticatedExamExamIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/dashboard': {
-      id: '/_authenticated/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+    '/_authenticated/exam/new': {
+      id: '/_authenticated/exam/new'
+      path: '/exam/new'
+      fullPath: '/exam/new'
+      preLoaderRoute: typeof AuthenticatedExamNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/feedback/': {
@@ -226,20 +240,6 @@ declare module '@tanstack/react-router' {
       path: '/feedback/$id'
       fullPath: '/feedback/$id'
       preLoaderRoute: typeof AuthenticatedFeedbackIdRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/exam/new': {
-      id: '/_authenticated/exam/new'
-      path: '/exam/new'
-      fullPath: '/exam/new'
-      preLoaderRoute: typeof AuthenticatedExamNewRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/exam/$examId': {
-      id: '/_authenticated/exam/$examId'
-      path: '/exam/$examId'
-      fullPath: '/exam/$examId'
-      preLoaderRoute: typeof AuthenticatedExamExamIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
