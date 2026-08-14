@@ -6,7 +6,10 @@ const HUB_BASE = "https://feedback.isaly.se";
 
 function getKey(): string {
   const key = process.env.FEEDBACK_HUB_API_KEY;
-  if (!key) throw new Error("Feedback Hub saknar API-nyckel.");
+  if (!key) {
+    console.error("[FeedbackHub] FEEDBACK_HUB_API_KEY is not set.");
+    throw new Error("Feedback Hub saknar API-nyckel.");
+  }
   return key;
 }
 
@@ -48,6 +51,8 @@ export const submitFeedback = createServerFn({ method: "POST" })
       }),
     });
     if (!res.ok) {
+      const errBody = await res.text().catch(() => "");
+      console.error(`[FeedbackHub] submit failed: ${res.status} ${errBody}`);
       throw new Error("Kunde inte skicka feedback just nu.");
     }
     const body = (await res.json().catch(() => ({}))) as { id?: string };
