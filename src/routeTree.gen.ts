@@ -20,6 +20,7 @@ import { Route as AuthenticatedExamExamIdRouteImport } from './routes/_authentic
 import { Route as AuthenticatedExamNewRouteImport } from './routes/_authenticated/exam.new'
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
+import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +77,11 @@ const AuthenticatedFeedbackIdRoute = AuthenticatedFeedbackIdRouteImport.update({
   path: '/feedback/$id',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
+  id: '/api/public/track',
+  path: '/api/public/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exam/new': typeof AuthenticatedExamNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
 }
 export interface FileRoutesByTo {
@@ -99,6 +106,7 @@ export interface FileRoutesByTo {
   '/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/exam/new': typeof AuthenticatedExamNewRoute
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
 }
 export interface FileRoutesById {
@@ -113,6 +121,7 @@ export interface FileRoutesById {
   '/_authenticated/exam/$examId': typeof AuthenticatedExamExamIdRoute
   '/_authenticated/exam/new': typeof AuthenticatedExamNewRoute
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
+  '/api/public/track': typeof ApiPublicTrackRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
 }
 export interface FileRouteTypes {
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/exam/$examId'
     | '/exam/new'
     | '/feedback/$id'
+    | '/api/public/track'
     | '/feedback/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/exam/$examId'
     | '/exam/new'
     | '/feedback/$id'
+    | '/api/public/track'
     | '/feedback'
   id:
     | '__root__'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_authenticated/exam/$examId'
     | '/_authenticated/exam/new'
     | '/_authenticated/feedback/$id'
+    | '/api/public/track'
     | '/_authenticated/feedback/'
   fileRoutesById: FileRoutesById
 }
@@ -161,6 +173,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiLessonAudioRoute: typeof ApiLessonAudioRoute
   SharedTokenRoute: typeof SharedTokenRoute
+  ApiPublicTrackRoute: typeof ApiPublicTrackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -242,6 +255,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFeedbackIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/track': {
+      id: '/api/public/track'
+      path: '/api/public/track'
+      fullPath: '/api/public/track'
+      preLoaderRoute: typeof ApiPublicTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -272,6 +292,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiLessonAudioRoute: ApiLessonAudioRoute,
   SharedTokenRoute: SharedTokenRoute,
+  ApiPublicTrackRoute: ApiPublicTrackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,4 @@
-type AnalyticsConfig = { apiKey: string; endpoint?: string };
+type AnalyticsConfig = { endpoint?: string };
 type QueuedEvent = {
   external_user_id: string | null;
   event_name: string;
@@ -8,7 +8,7 @@ type QueuedEvent = {
 };
 
 const DEFAULTS = {
-  endpoint: "https://id-preview--a67f56e8-f4d8-4733-bc41-85e5d4e0413b.lovable.app/api/public/track",
+  endpoint: "/api/public/track",
   flushIntervalMs: 5000,
   batchSize: 10,
   sessionTimeoutMs: 30 * 60 * 1000,
@@ -25,7 +25,7 @@ class AnalyticsClient {
   private flushTimer: ReturnType<typeof setInterval> | null = null;
   private inited = false;
 
-  init(config: AnalyticsConfig) {
+  init(config: AnalyticsConfig = {}) {
     if (this.inited) return;
     this.config = { ...DEFAULTS, ...config };
     this.inited = true;
@@ -40,7 +40,9 @@ class AnalyticsClient {
             this.lastActivity = saved.lastActivity;
           }
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
 
       this.flushTimer = setInterval(() => this.flush(), this.config.flushIntervalMs);
       window.addEventListener("beforeunload", () => this.flush(true));
@@ -68,7 +70,9 @@ class AnalyticsClient {
         SESSION_STORAGE_KEY,
         JSON.stringify({ sessionId: this.sessionId, lastActivity: this.lastActivity }),
       );
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
   }
 
   track(eventName: string, properties?: Record<string, unknown>) {
@@ -92,7 +96,7 @@ class AnalyticsClient {
   flush(useBeacon = false) {
     if (!this.config || this.queue.length === 0) return;
     const events = this.queue.splice(0, this.queue.length);
-    const payload = JSON.stringify({ api_key: this.config.apiKey, events });
+    const payload = JSON.stringify({ events });
 
     if (useBeacon && typeof navigator !== "undefined" && navigator.sendBeacon) {
       navigator.sendBeacon(this.config.endpoint, new Blob([payload], { type: "application/json" }));
@@ -114,7 +118,11 @@ class AnalyticsClient {
     this.sessionId = null;
     this.lastActivity = 0;
     if (typeof window !== "undefined") {
-      try { window.sessionStorage.removeItem(SESSION_STORAGE_KEY); } catch { /* ignore */ }
+      try {
+        window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+      } catch {
+        /* ignore */
+      }
     }
   }
 
