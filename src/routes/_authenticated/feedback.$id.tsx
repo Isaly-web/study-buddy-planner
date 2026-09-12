@@ -3,10 +3,16 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, AlertCircle, MessageSquare } from "lucide-react";
 import { getMyFeedback, type FeedbackDetail } from "@/lib/feedback.functions";
+import {
+  statusMeta,
+  statusLabel,
+  categoryMeta,
+  categoryLabel,
+  formatDateTime,
+} from "@/lib/feedback";
 
 export const Route = createFileRoute("/_authenticated/feedback/$id")({
   head: () => ({
@@ -17,32 +23,6 @@ export const Route = createFileRoute("/_authenticated/feedback/$id")({
   }),
   component: FeedbackDetailPage,
 });
-
-function statusLabel(status: string | null): string {
-  const s = (status ?? "open").toLowerCase();
-  const map: Record<string, string> = {
-    open: "Öppen",
-    pending: "Väntar",
-    in_progress: "Pågår",
-    "in-progress": "Pågår",
-    resolved: "Löst",
-    closed: "Stängd",
-    done: "Klar",
-  };
-  return map[s] ?? status ?? "Öppen";
-}
-
-function categoryLabel(c: string | null): string {
-  const map: Record<string, string> = { bug: "Bugg", suggestion: "Förslag", other: "Annat" };
-  return map[(c ?? "").toLowerCase()] ?? c ?? "Annat";
-}
-
-function formatDateTime(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("sv-SE", { dateStyle: "medium", timeStyle: "short" });
-}
 
 function FeedbackDetailPage() {
   const { id } = Route.useParams();
@@ -74,12 +54,7 @@ function FeedbackDetailPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Vi kunde inte nå Feedback-tjänsten just nu. Försök igen om en stund.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => query.refetch()}
-            >
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => query.refetch()}>
               Försök igen
             </Button>
           </Card>
@@ -87,8 +62,18 @@ function FeedbackDetailPage() {
           <>
             <Card className="p-5">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge>{statusLabel(query.data.status)}</Badge>
-                <Badge variant="outline">{categoryLabel(query.data.category)}</Badge>
+                <span
+                  className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusMeta(query.data.status).className}`}
+                >
+                  {statusLabel(query.data.status)}
+                </span>
+                {query.data.category && (
+                  <span
+                    className={`rounded-full border px-2 py-0.5 text-xs font-medium ${categoryMeta(query.data.category).className}`}
+                  >
+                    {categoryLabel(query.data.category)}
+                  </span>
+                )}
                 <span className="text-xs text-muted-foreground">
                   Skickad {formatDateTime(query.data.created_at)}
                 </span>
@@ -116,9 +101,7 @@ function FeedbackDetailPage() {
                     <li key={r.id}>
                       <Card className="p-4">
                         <div className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">
-                            {r.author ?? "Team"}
-                          </span>
+                          <span className="font-medium text-foreground">{r.author ?? "Team"}</span>
                           <span>{formatDateTime(r.created_at)}</span>
                         </div>
                         <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">

@@ -28,15 +28,36 @@ export const submitFeedback = createServerFn({ method: "POST" })
     z
       .object({
         message: z.string().trim().min(1).max(4000),
-        category: z.enum(["bug", "suggestion", "other"]),
+        category: z.enum(["bug", "suggestion", "question", "other"]),
         page_url: z.string().trim().max(500).optional().nullable(),
         os: z.string().trim().max(120).optional().nullable(),
         device: z.string().trim().max(120).optional().nullable(),
+        app_version: z.string().trim().max(60).optional(),
+        anonymous: z.boolean().optional(),
+        reporter_name: z.string().trim().max(120).optional().nullable(),
+        steps_to_reproduce: z.string().trim().max(4000).optional(),
+        screenshot_path: z.string().trim().max(500).optional().nullable(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
     const email = await getUserEmail(context.supabase);
+
+    let screenshotUrl: string | null = null;
+    if (data.screenshot_path) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: signed, error } = await supabaseAdmin.storage
+        .from("feedback-screenshots")
+        .createSignedUrl(data.screenshot_path, 60 * 60 * 24 * 365);
+      if (error) {
+        console.warn("[FeedbackHub] signed url failed", error.message);
+      } else {
+        screenshotUrl = signed?.signedUrl ?? null;
+      }
+    }
+
+    const userIdentifier = data.anonymous ? null : email;
+
     const res = await fetch(`${HUB_BASE}/api/public/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -44,10 +65,14 @@ export const submitFeedback = createServerFn({ method: "POST" })
         api_key: getKey(),
         message: data.message,
         category: data.category,
-        user_identifier: email,
+        user_identifier: userIdentifier,
         page_url: data.page_url ?? null,
         os: data.os ?? null,
         device: data.device ?? null,
+        ...(data.app_version ? { app_version: data.app_version } : {}),
+        ...(data.reporter_name ? { reporter_name: data.reporter_name } : {}),
+        ...(data.steps_to_reproduce ? { steps_to_reproduce: data.steps_to_reproduce } : {}),
+        ...(screenshotUrl ? { screenshot_url: screenshotUrl } : {}),
       }),
     });
     if (!res.ok) {
@@ -122,9 +147,7 @@ export const getMyFeedback = createServerFn({ method: "GET" })
     const res = await fetch(url, { method: "GET" });
     if (!res.ok) throw new Error("Kunde inte hämta feedback.");
     const body = (await res.json()) as Record<string, unknown>;
-    const item =
-      (body.feedback as Record<string, unknown> | undefined) ??
-      body;
+    const item = (body.feedback as Record<string, unknown> | undefined) ?? body;
     const repliesRaw = Array.isArray(body.replies)
       ? (body.replies as unknown[])
       : Array.isArray(body.conversation)
@@ -137,7 +160,10 @@ export const getMyFeedback = createServerFn({ method: "GET" })
       return {
         id: String(x.id ?? crypto.randomUUID()),
         message: String(x.message ?? x.body ?? x.content ?? ""),
-        author: (x.author as string | null | undefined) ?? (x.author_role as string | null | undefined) ?? null,
+        author:
+          (x.author as string | null | undefined) ??
+          (x.author_role as string | null | undefined) ??
+          null,
         created_at: String(x.created_at ?? x.createdAt ?? ""),
       };
     });

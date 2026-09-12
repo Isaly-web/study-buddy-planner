@@ -3,9 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { AppHeader } from "@/components/AppHeader";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { listMyFeedback, type FeedbackListItem } from "@/lib/feedback.functions";
+import { statusMeta, statusLabel, categoryMeta, categoryLabel, formatDate } from "@/lib/feedback";
 import { ChevronRight, MessageSquare, AlertCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/feedback/")({
@@ -18,46 +18,9 @@ export const Route = createFileRoute("/_authenticated/feedback/")({
   component: FeedbackListPage,
 });
 
-function statusVariant(status: string | null): "default" | "secondary" | "outline" {
-  const s = (status ?? "").toLowerCase();
-  if (s === "resolved" || s === "closed" || s === "done") return "default";
-  if (s === "in_progress" || s === "in-progress" || s === "pending") return "secondary";
-  return "outline";
-}
-
-function statusLabel(status: string | null): string {
-  const s = (status ?? "open").toLowerCase();
-  const map: Record<string, string> = {
-    open: "Öppen",
-    pending: "Väntar",
-    in_progress: "Pågår",
-    "in-progress": "Pågår",
-    resolved: "Löst",
-    closed: "Stängd",
-    done: "Klar",
-  };
-  return map[s] ?? status ?? "Öppen";
-}
-
-function categoryLabel(c: string | null): string {
-  const map: Record<string, string> = {
-    bug: "Bugg",
-    suggestion: "Förslag",
-    other: "Annat",
-  };
-  return map[(c ?? "").toLowerCase()] ?? c ?? "Annat";
-}
-
 function truncate(t: string, n = 140) {
   if (t.length <= n) return t;
   return t.slice(0, n).trimEnd() + "…";
-}
-
-function formatDate(iso: string) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" });
 }
 
 function FeedbackListPage() {
@@ -92,12 +55,7 @@ function FeedbackListPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               Vi kunde inte nå Feedback-tjänsten just nu. Försök igen om en stund.
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => query.refetch()}
-            >
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => query.refetch()}>
               Försök igen
             </Button>
           </Card>
@@ -113,26 +71,28 @@ function FeedbackListPage() {
           <ul className="space-y-3">
             {query.data.map((item) => (
               <li key={item.id}>
-                <Link
-                  to="/feedback/$id"
-                  params={{ id: item.id }}
-                  className="block"
-                >
+                <Link to="/feedback/$id" params={{ id: item.id }} className="block">
                   <Card className="p-4 transition-colors hover:bg-accent/50">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <Badge variant={statusVariant(item.status)}>
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${statusMeta(item.status).className}`}
+                          >
                             {statusLabel(item.status)}
-                          </Badge>
-                          <Badge variant="outline">{categoryLabel(item.category)}</Badge>
+                          </span>
+                          {item.category && (
+                            <span
+                              className={`rounded-full border px-2 py-0.5 text-xs font-medium ${categoryMeta(item.category).className}`}
+                            >
+                              {categoryLabel(item.category)}
+                            </span>
+                          )}
                           <span className="text-xs text-muted-foreground">
                             {formatDate(item.created_at)}
                           </span>
                         </div>
-                        <p className="mt-2 text-sm text-foreground">
-                          {truncate(item.message)}
-                        </p>
+                        <p className="mt-2 text-sm text-foreground">{truncate(item.message)}</p>
                       </div>
                       <ChevronRight className="mt-1 h-5 w-5 shrink-0 text-muted-foreground" />
                     </div>
