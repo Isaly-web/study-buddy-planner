@@ -28,12 +28,12 @@ async function generatePlanWithAI(input: {
   description: string;
   totalDays: number;
 }): Promise<PlanResult> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
 
   const { generateObject } = await import("ai");
-  const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-  const gateway = createLovableAiGatewayProvider(apiKey);
+  const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+  const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
   const schema = z.object({
     topics: z
@@ -68,7 +68,7 @@ async function generatePlanWithAI(input: {
   ].join(" ");
 
   const { object } = await generateObject({
-    model: gateway("google/gemini-3-flash-preview"),
+    model,
     schema,
     prompt,
   });
@@ -257,12 +257,12 @@ export const generateExercises = createServerFn({ method: "POST" })
     const exam = (task as any).exams;
     if (exam.user_id !== context.userId) throw new Error("Ingen åtkomst.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
 
     const { generateObject } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+    const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
     const levelSchema = z.object({
       criteria: z.string().min(10),
@@ -290,7 +290,7 @@ export const generateExercises = createServerFn({ method: "POST" })
     ].join(" ");
 
     const { object } = await generateObject({
-      model: gateway("google/gemini-3-flash-preview"),
+      model,
       schema,
       prompt,
     });
@@ -320,12 +320,12 @@ export const gradeAnswer = createServerFn({ method: "POST" })
     const exam = (task as any).exams;
     if (exam.user_id !== context.userId) throw new Error("Ingen åtkomst.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
 
     const { generateObject } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+    const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
     const schema = z.object({
       verdict: z.enum(["correct", "partially_correct", "incorrect"]),
@@ -353,7 +353,7 @@ export const gradeAnswer = createServerFn({ method: "POST" })
     ].join(" ");
 
     const { object } = await generateObject({
-      model: gateway("google/gemini-3-flash-preview"),
+      model,
       schema,
       prompt,
     });
@@ -385,12 +385,12 @@ export const coachAnswer = createServerFn({ method: "POST" })
     const exam = (task as any).exams;
     if (exam.user_id !== context.userId) throw new Error("Ingen åtkomst.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
 
     const { generateObject } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+    const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
     const schema = z.object({
       is_correct: z.boolean(),
@@ -419,7 +419,7 @@ export const coachAnswer = createServerFn({ method: "POST" })
     ].filter(Boolean).join(" ");
 
     const { object } = await generateObject({
-      model: gateway("google/gemini-3-flash-preview"),
+      model,
       schema,
       prompt,
     });
@@ -449,11 +449,11 @@ export const generateVariantQuestion = createServerFn({ method: "POST" })
     const exam = (task as any).exams;
     if (exam.user_id !== context.userId) throw new Error("Ingen åtkomst.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
     const { generateObject } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+    const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
     const schema = z.object({
       prompt: z.string().min(5),
@@ -470,7 +470,7 @@ export const generateVariantQuestion = createServerFn({ method: "POST" })
     ].join(" ");
 
     const { object } = await generateObject({
-      model: gateway("google/gemini-3-flash-preview"),
+      model,
       schema,
       prompt,
     });
@@ -499,11 +499,11 @@ export const generateLesson = createServerFn({ method: "POST" })
     const exam = (task as any).exams;
     if (exam.user_id !== context.userId) throw new Error("Ingen åtkomst.");
 
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("AI Gateway saknar nyckel.");
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) throw new Error("Anthropic API-nyckel saknas.");
     const { generateObject } = await import("ai");
-    const { createLovableAiGatewayProvider } = await import("./ai-gateway.server");
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const { createAnthropicProvider, DEFAULT_MODEL } = await import("./ai-gateway.server");
+    const model = createAnthropicProvider(apiKey)(DEFAULT_MODEL);
 
     const levelStyle: Record<number, string> = {
       1: "Förklara som för en 12-åring – väldigt enkelt, korta meningar, vardagliga bilder.",
@@ -533,7 +533,7 @@ export const generateLesson = createServerFn({ method: "POST" })
         `Svara med giltig JSON enligt schemat.`,
       ].filter(Boolean).join(" ");
       const { object } = await generateObject({
-        model: gateway("google/gemini-3-flash-preview"),
+        model,
         schema,
         prompt,
       });
@@ -560,7 +560,7 @@ export const generateLesson = createServerFn({ method: "POST" })
     ].filter(Boolean).join(" ");
 
     const { object } = await generateObject({
-      model: gateway("google/gemini-3-flash-preview"),
+      model,
       schema,
       prompt,
     });
