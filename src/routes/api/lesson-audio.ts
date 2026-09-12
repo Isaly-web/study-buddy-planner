@@ -4,7 +4,7 @@ export const Route = createFileRoute("/api/lesson-audio")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) return new Response("Missing key", { status: 500 });
 
         // Require an authenticated Supabase user to prevent anonymous TTS abuse.
@@ -36,14 +36,14 @@ export const Route = createFileRoute("/api/lesson-audio")({
         const voice = body.voice ?? "alloy";
 
         try {
-          const upstream = await fetch("https://ai.gateway.lovable.dev/v1/audio/speech", {
+          const upstream = await fetch("https://api.openai.com/v1/audio/speech", {
             method: "POST",
             headers: {
               Authorization: `Bearer ${apiKey}`,
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "openai/gpt-4o-mini-tts",
+              model: "gpt-4o-mini-tts",
               input: text,
               voice,
               stream_format: "sse",

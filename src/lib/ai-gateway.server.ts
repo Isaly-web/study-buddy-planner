@@ -1,10 +1,10 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+import { createAnthropic } from "@ai-sdk/anthropic";
 
-export function createLovableAiGatewayProvider(apiKey: string) {
-  return createOpenAICompatible({
-    name: "lovable-ai-gateway",
-    baseURL: "https://ai.gateway.lovable.dev/v1",
-    headers: { "Lovable-API-Key": apiKey },
-    supportsStructuredOutputs: true,
-  });
+// Isaly AI-standard: text-generering går direkt mot Claude, inte via en
+// tredjeparts-gateway. Haiku är default eftersom dessa anrop (studieplaner,
+// övningar, rättning) tidigare kördes på Lovable AI Gateway's "flash"-nivå.
+export const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
+
+export function createAnthropicProvider(apiKey: string) {
+  return createAnthropic({ apiKey });
 }
