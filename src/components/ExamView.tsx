@@ -16,7 +16,9 @@ import { CalendarDays, Share2, Copy, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { daysUntil, formatSwedishDate, readinessLabel } from "@/lib/study-helpers";
 import { ExercisesDialog } from "@/components/ExercisesDialog";
+import { VocabularyTab } from "@/components/VocabularyTab";
 import { analytics } from "@/lib/analytics-sdk";
+import { useTranslation } from "@/lib/i18n";
 
 export type ExamBundle = {
   exam: {
@@ -47,6 +49,7 @@ export function ExamView({
   bundle: ExamBundle;
   onToggleTask?: (taskId: string, done: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const { exam, topics, tasks, readonly } = bundle;
   const total = tasks.length;
   const done = tasks.filter((t) => t.completed_at).length;
@@ -90,7 +93,7 @@ export function ExamView({
   async function nativeShare() {
     if (typeof navigator !== "undefined" && "share" in navigator) {
       try {
-        await (navigator as any).share({
+        await (navigator as Navigator & { share: (data: ShareData) => Promise<void> }).share({
           title: `Studieplan – ${exam.subject}`,
           text: `Följ min studieplan inför ${exam.subject}`,
           url: shareUrl,
@@ -131,8 +134,8 @@ export function ExamView({
           <DialogHeader>
             <DialogTitle>Dela med vårdnadshavare</DialogTitle>
             <DialogDescription>
-              Kopiera länken nedan och skicka den själv via sms, mejl eller chatt.
-              Alla med länken kan se planen – ingen inloggning behövs.
+              Kopiera länken nedan och skicka den själv via sms, mejl eller chatt. Alla med länken
+              kan se planen – ingen inloggning behövs.
             </DialogDescription>
           </DialogHeader>
           <div className="flex gap-2">
@@ -171,6 +174,7 @@ export function ExamView({
         <TabsList>
           <TabsTrigger value="days">Dag-för-dag</TabsTrigger>
           <TabsTrigger value="topics">Områden</TabsTrigger>
+          {!readonly && <TabsTrigger value="vocabulary">{t("vocabulary_tab")}</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="days" className="mt-4 space-y-4">
@@ -215,7 +219,9 @@ export function ExamView({
                           }}
                         />
                         <div className="flex-1">
-                          <p className={`${t.completed_at ? "text-muted-foreground line-through" : ""}`}>
+                          <p
+                            className={`${t.completed_at ? "text-muted-foreground line-through" : ""}`}
+                          >
                             {t.title}
                           </p>
                           <p className="text-xs text-muted-foreground">{t.estimated_minutes} min</p>
@@ -257,12 +263,17 @@ export function ExamView({
               <Card key={topic.id} className="p-5">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-semibold">{topic.title}</h3>
-                  <span className="text-xs text-muted-foreground">{tdone}/{items.length}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {tdone}/{items.length}
+                  </span>
                 </div>
                 <Progress value={tpct} className="mt-3 h-1.5" />
                 <ul className="mt-3 space-y-1.5 text-sm">
                   {items.map((t) => (
-                    <li key={t.id} className={t.completed_at ? "text-muted-foreground line-through" : ""}>
+                    <li
+                      key={t.id}
+                      className={t.completed_at ? "text-muted-foreground line-through" : ""}
+                    >
                       • {t.title}
                     </li>
                   ))}
@@ -271,6 +282,12 @@ export function ExamView({
             );
           })}
         </TabsContent>
+
+        {!readonly && (
+          <TabsContent value="vocabulary" className="mt-4 space-y-4">
+            <VocabularyTab examId={exam.id} topics={topics} />
+          </TabsContent>
+        )}
       </Tabs>
       {!readonly && (
         <ExercisesDialog
