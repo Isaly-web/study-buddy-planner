@@ -31,9 +31,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Pencil, Plus, X, Check } from "lucide-react";
+import { Trash2, Pencil, Plus, X, Check, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
+import { VocabularyImportPanel } from "@/components/VocabularyImportPanel";
 
 type Term = { id: string; term: string; definition: string; example: string | null; order: number };
 
@@ -116,6 +117,7 @@ export function VocabularySetDialog({
   const [editExample, setEditExample] = useState("");
   const [confirmDeleteTermId, setConfirmDeleteTermId] = useState<string | null>(null);
   const [confirmDeleteSet, setConfirmDeleteSet] = useState(false);
+  const [mode, setMode] = useState<"list" | "import">("list");
 
   useEffect(() => {
     if (!open) {
@@ -123,6 +125,7 @@ export function VocabularySetDialog({
       setNewDefinition("");
       setNewExample("");
       setEditingId(null);
+      setMode("list");
     }
   }, [open]);
 
@@ -180,6 +183,14 @@ export function VocabularySetDialog({
 
           {isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{t("loading")}</p>
+          ) : mode === "import" && set?.id ? (
+            <VocabularyImportPanel
+              vocabularySetId={set.id}
+              existingTerms={terms ?? []}
+              invalidateAfterChange={invalidateAfterChange}
+              onImported={() => setMode("list")}
+              onCancel={() => setMode("list")}
+            />
           ) : (
             <div className="space-y-3">
               {(terms ?? []).length === 0 ? (
@@ -243,6 +254,15 @@ export function VocabularySetDialog({
               )}
 
               <Separator />
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setMode("import")}
+                disabled={!set?.id}
+              >
+                <Upload className="h-3.5 w-3.5" /> {t("vocabulary_import_button")}
+              </Button>
 
               <div className="space-y-2 rounded-md border border-dashed p-3">
                 <Label>{t("vocabulary_add_term")}</Label>
