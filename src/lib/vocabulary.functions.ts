@@ -317,7 +317,14 @@ async function callVocabularyExtractionModel(
             ],
           });
     return object;
-  } catch {
+  } catch (err) {
+    const { NoObjectGeneratedError } = await import("ai");
+    const detail = NoObjectGeneratedError.isInstance(err)
+      ? `no valid object generated (finishReason=${err.finishReason ?? "unknown"}, text=${JSON.stringify(err.text?.slice(0, 500))})`
+      : err instanceof Error
+        ? (err.stack ?? err.message)
+        : String(err);
+    console.error(`[VocabularyImport] extraction (${params.kind}) failed: ${detail}`);
     throw new Error(
       params.kind === "multimodal"
         ? "Kunde inte tolka bilden. Försök med en tydligare bild eller klistra in texten manuellt."
