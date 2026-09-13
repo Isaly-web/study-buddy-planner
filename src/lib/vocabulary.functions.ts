@@ -117,6 +117,91 @@ export const listVocabularyOverview = createServerFn({ method: "GET" })
     });
   });
 
+export type VocabularyPracticeItem = {
+  topic_id: string;
+  topic_title: string;
+  exam_id: string;
+  exam_subject: string;
+  term_count: number;
+  accuracy: number | null;
+};
+
+// Aggregates practiceable vocabulary across ALL of the user's exams, so it can
+// be surfaced as a standalone activity on the home page (not scoped to one exam).
+export const listVocabularyPracticeItems = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<VocabularyPracticeItem[]> => {
+    const { data: topics, error: topicsErr } = await context.supabase
+      .from("topics")
+      .select("id, title, exam_id, exams!inner(subject, user_id)")
+      .eq("exams.user_id", context.userId);
+    if (topicsErr) throw new Error(topicsErr.message);
+    if (!topics || topics.length === 0) return [];
+
+    const topicIds = topics.map((t) => t.id);
+    const { data: sets, error: setsErr } = await context.supabase
+      .from("vocabulary_sets")
+      .select("id, topic_id")
+      .in("topic_id", topicIds);
+    if (setsErr) throw new Error(setsErr.message);
+
+    const setIds = (sets ?? []).map((s) => s.id);
+    let terms: { id: string; vocabulary_set_id: string }[] = [];
+    if (setIds.length > 0) {
+      const { data: termRows, error: termsErr } = await context.supabase
+        .from("vocabulary_terms")
+        .select("id, vocabulary_set_id")
+        .in("vocabulary_set_id", setIds);
+      if (termsErr) throw new Error(termsErr.message);
+      terms = termRows ?? [];
+    }
+
+    const termIds = terms.map((t) => t.id);
+    let attempts: { term_id: string; is_correct: boolean }[] = [];
+    if (termIds.length > 0) {
+      const { data: attemptRows, error: attemptsErr } = await context.supabase
+        .from("vocabulary_attempts")
+        .select("term_id, is_correct")
+        .in("term_id", termIds);
+      if (attemptsErr) throw new Error(attemptsErr.message);
+      attempts = attemptRows ?? [];
+    }
+
+    const setByTopic = new Map((sets ?? []).map((s) => [s.topic_id, s.id]));
+    const termsBySet = new Map<string, number>();
+    for (const t of terms)
+      termsBySet.set(t.vocabulary_set_id, (termsBySet.get(t.vocabulary_set_id) ?? 0) + 1);
+    const setIdByTermId = new Map(terms.map((t) => [t.id, t.vocabulary_set_id]));
+
+    const statsBySet = new Map<string, { attempts: number; correct: number }>();
+    for (const a of attempts) {
+      const setId = setIdByTermId.get(a.term_id);
+      if (!setId) continue;
+      const s = statsBySet.get(setId) ?? { attempts: 0, correct: 0 };
+      s.attempts += 1;
+      if (a.is_correct) s.correct += 1;
+      statsBySet.set(setId, s);
+    }
+
+    return topics
+      .map((topic: any) => {
+        const setId = setByTopic.get(topic.id) ?? null;
+        const termCount = setId ? (termsBySet.get(setId) ?? 0) : 0;
+        const stats = setId ? statsBySet.get(setId) : undefined;
+        return {
+          topic_id: topic.id as string,
+          topic_title: topic.title as string,
+          exam_id: topic.exam_id as string,
+          exam_subject: topic.exams.subject as string,
+          term_count: termCount,
+          accuracy:
+            stats && stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : null,
+        };
+      })
+      .filter((item) => item.term_count > 0)
+      .sort((a, b) => (a.accuracy ?? -1) - (b.accuracy ?? -1));
+  });
+
 export const getOrCreateVocabularySet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
