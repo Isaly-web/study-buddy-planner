@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { AppHeader } from "@/components/AppHeader";
-import { CalendarDays, BookOpenText, Plus, Sparkles, Trash2 } from "lucide-react";
+import { AlertCircle, CalendarDays, BookOpenText, Plus, Sparkles, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { readinessLabel, daysUntil } from "@/lib/study-helpers";
 import { useState } from "react";
@@ -72,6 +72,16 @@ function Dashboard() {
           <Card className="p-5">
             {today.isLoading ? (
               <p className="text-sm text-muted-foreground">Laddar…</p>
+            ) : today.isError ? (
+              <div className="text-center">
+                <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Kunde inte ladda dagens uppgifter.
+                </p>
+                <Button variant="outline" size="sm" className="mt-3" onClick={() => today.refetch()}>
+                  Försök igen
+                </Button>
+              </div>
             ) : (today.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Inget att göra idag. {exams.data?.length ? "Bra jobbat – ta en paus 🌿" : "Skapa ett prov för att komma igång."}
@@ -111,6 +121,16 @@ function Dashboard() {
           {vocab.isLoading ? (
             <Card className="p-5">
               <p className="text-sm text-muted-foreground">Laddar…</p>
+            </Card>
+          ) : vocab.isError ? (
+            <Card className="p-5 text-center">
+              <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Kunde inte ladda ordförrådet.
+              </p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => vocab.refetch()}>
+                Försök igen
+              </Button>
             </Card>
           ) : !vocab.data?.length ? (
             <Card className="p-5">
@@ -160,6 +180,14 @@ function Dashboard() {
           </div>
           {exams.isLoading ? (
             <p className="text-sm text-muted-foreground">Laddar…</p>
+          ) : exams.isError ? (
+            <Card className="p-8 text-center">
+              <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">Kunde inte ladda proven.</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={() => exams.refetch()}>
+                Försök igen
+              </Button>
+            </Card>
           ) : !exams.data?.length ? (
             <Card className="flex flex-col items-center p-10 text-center">
               <Sparkles className="h-8 w-8 text-primary" />
