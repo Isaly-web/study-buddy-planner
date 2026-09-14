@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { BookOpenCheck } from "lucide-react";
+import { BookOpenCheck, Eye, EyeOff } from "lucide-react";
 import { analytics } from "@/lib/analytics-sdk";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
@@ -29,6 +29,7 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -96,9 +97,21 @@ function AuthPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">{t("password")}</Label>
-              <Input id="password" type="password" required minLength={6}
-                value={password} onChange={(e) => setPassword(e.target.value)}
-                autoComplete={mode === "signin" ? "current-password" : "new-password"} />
+              <div className="relative">
+                <Input id="password" type={showPassword ? "text" : "password"} required minLength={6}
+                  value={password} onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                  className="pr-10" />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? t("hide_password") : t("show_password")}
+                  aria-pressed={showPassword}
+                  className="absolute inset-y-0 right-0 flex items-center px-3 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? t("loading") + "…" : mode === "signin" ? t("login") : t("register")}
