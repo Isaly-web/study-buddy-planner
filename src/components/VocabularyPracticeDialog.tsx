@@ -24,7 +24,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, RotateCcw, Sparkles } from "lucide-react";
 import { useTranslation } from "@/lib/i18n";
 
 export function VocabularyPracticeDialog({
@@ -42,14 +42,22 @@ export function VocabularyPracticeDialog({
   const qc = useQueryClient();
 
   const getOrCreateFn = useServerFn(getOrCreateVocabularySet);
-  const { data: set } = useQuery({
+  const {
+    data: set,
+    isError: setIsError,
+    refetch: refetchSet,
+  } = useQuery({
     queryKey: ["vocabulary-set", topicId],
     queryFn: () => getOrCreateFn({ data: { topic_id: topicId!, title: topicTitle } }),
     enabled: open && !!topicId,
   });
 
   const listTermsFn = useServerFn(listVocabularyTerms);
-  const { data: terms } = useQuery({
+  const {
+    data: terms,
+    isError: termsIsError,
+    refetch: refetchTerms,
+  } = useQuery({
     queryKey: ["vocabulary-terms", set?.id],
     queryFn: () => listTermsFn({ data: { vocabulary_set_id: set!.id } }),
     enabled: !!set?.id,
@@ -99,7 +107,20 @@ export function VocabularyPracticeDialog({
           <DialogDescription>{topicTitle}</DialogDescription>
         </DialogHeader>
 
-        {!session || !terms ? (
+        {setIsError || termsIsError ? (
+          <div className="py-6 text-center">
+            <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
+            <p className="mt-2 text-sm text-muted-foreground">{t("error_generic")}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-3"
+              onClick={() => (setIsError ? refetchSet() : refetchTerms())}
+            >
+              {t("vocabulary_import_retry")}
+            </Button>
+          </div>
+        ) : !session || !terms ? (
           <p className="py-6 text-center text-sm text-muted-foreground">{t("loading")}</p>
         ) : terms.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
