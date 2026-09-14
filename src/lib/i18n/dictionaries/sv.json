@@ -22,6 +22,8 @@
   "logout": "Logga ut",
   "email": "E-post",
   "password": "Lösenord",
+  "show_password": "Visa lösenord",
+  "hide_password": "Dölj lösenord",
   "name": "Namn",
   "submit": "Skicka",
   "required_field": "Obligatoriskt fält",

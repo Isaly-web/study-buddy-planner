@@ -22,6 +22,8 @@
   "logout": "Log out",
   "email": "Email",
   "password": "Password",
+  "show_password": "Show password",
+  "hide_password": "Hide password",
   "name": "Name",
   "submit": "Submit",
   "required_field": "Required field",
