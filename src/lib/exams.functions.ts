@@ -22,6 +22,13 @@ export function hasPlanningSupport(goalType: string): goalType is PlannableGoalT
   return (PLANNABLE_GOAL_TYPES as readonly string[]).includes(goalType);
 }
 
+// The AI exercise/tutor feature (generateExercises/gradeAnswer/coachAnswer/...)
+// is exam-specific: it grades against Lgr22 E/C/A criteria, which makes no
+// sense for a plain assignment. Only "exam" goals get it in Phase 3.
+export function supportsExerciseTutor(goalType: string): boolean {
+  return goalType === "exam";
+}
+
 type PlanTopic = { title: string; tasks: { title: string; estimated_minutes: number }[] };
 type PlanResult = { topics: PlanTopic[] };
 
@@ -241,7 +248,7 @@ export const listExams = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data: exams, error } = await context.supabase
       .from("exams")
-      .select("id, subject, grade, due_date, share_token, created_at")
+      .select("id, subject, grade, due_date, share_token, created_at, goal_type")
       .order("due_date", { ascending: true });
     if (error) throw new Error(error.message);
 
@@ -268,6 +275,7 @@ export const listExams = createServerFn({ method: "GET" })
       exam_date: e.due_date as string,
       share_token: e.share_token,
       created_at: e.created_at,
+      goal_type: e.goal_type as GoalType,
       total_tasks: counts[e.id]?.total ?? 0,
       done_tasks: counts[e.id]?.done ?? 0,
     }));
@@ -279,7 +287,9 @@ export const getTodayTasks = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, completed_at, goal_id, day_date, exams!inner(subject, user_id)")
+      .select(
+        "id, title, estimated_minutes, completed_at, goal_id, day_date, exams!inner(subject, user_id, goal_type)",
+      )
       .eq("day_date", today)
       .eq("exams.user_id", context.userId)
       .order("order", { ascending: true });
@@ -291,6 +301,7 @@ export const getTodayTasks = createServerFn({ method: "GET" })
       completed_at: row.completed_at as string | null,
       exam_id: row.goal_id as string,
       subject: row.exams.subject as string,
+      goal_type: row.exams.goal_type as GoalType,
     }));
   });
 
@@ -670,7 +681,7 @@ async function loadExamBundle(
 ) {
   let q = client
     .from("exams")
-    .select("id, subject, grade, description, due_date, share_token, user_id")
+    .select("id, subject, grade, description, due_date, share_token, user_id, goal_type")
     .eq("id", examId);
   if (opts.ownerId) q = q.eq("user_id", opts.ownerId);
   const { data: exam, error } = await q.maybeSingle();
@@ -697,6 +708,7 @@ async function loadExamBundle(
       description: (exam.description as string | null) ?? null,
       exam_date: exam.due_date as string,
       share_token: opts.shared ? null : (exam.share_token as string),
+      goal_type: exam.goal_type as GoalType,
     },
     topics: (topics ?? []) as { id: string; title: string; order: number }[],
     tasks: (tasks ?? []) as {

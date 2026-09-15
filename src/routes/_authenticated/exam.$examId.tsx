@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { getExam, toggleTask } from "@/lib/exams.functions";
 import { AppHeader } from "@/components/AppHeader";
 import { ExamView } from "@/components/ExamView";
+import { AssignmentView } from "@/components/AssignmentView";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -46,10 +47,17 @@ function ExamDetail() {
         ) : error ? (
           <p className="text-destructive">Kunde inte ladda provet. Försök igen.</p>
         ) : data ? (
-          <ExamView
-            bundle={data}
-            onToggleTask={(task_id, done) => toggle.mutate({ task_id, done })}
-          />
+          data.exam.goal_type === "assignment" ? (
+            <AssignmentView
+              bundle={data}
+              onToggleTask={(task_id, done) => toggle.mutate({ task_id, done })}
+            />
+          ) : (
+            <ExamView
+              bundle={data}
+              onToggleTask={(task_id, done) => toggle.mutate({ task_id, done })}
+            />
+          )
         ) : null}
       </main>
     </div>

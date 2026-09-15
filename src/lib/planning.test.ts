@@ -5,6 +5,7 @@ import {
   planAssignmentSessions,
   buildAssignmentTaskRows,
   hasPlanningSupport,
+  supportsExerciseTutor,
   GOAL_TYPES,
   PLANNABLE_GOAL_TYPES,
 } from "./exams.functions";
@@ -139,5 +140,20 @@ describe("hasPlanningSupport (goal-type awareness)", () => {
   it("rejects unknown goal types", () => {
     expect(hasPlanningSupport("homework")).toBe(false);
     expect(hasPlanningSupport("")).toBe(false);
+  });
+});
+
+describe("supportsExerciseTutor (Study Home: exam-only AI tutor gating)", () => {
+  it("allows the AI exercise tutor for exams", () => {
+    expect(supportsExerciseTutor("exam")).toBe(true);
+  });
+
+  it("does NOT allow the AI exercise tutor for assignments", () => {
+    expect(supportsExerciseTutor("assignment")).toBe(false);
+  });
+
+  it("does NOT allow the AI exercise tutor for vocabulary or other goals", () => {
+    expect(supportsExerciseTutor("vocabulary")).toBe(false);
+    expect(supportsExerciseTutor("other")).toBe(false);
   });
 });
