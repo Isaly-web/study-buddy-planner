@@ -9,10 +9,23 @@ const newExamSchema = z.object({
   exam_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+// The full set of goal types the data model recognizes (Phase 1). Only
+// "exam" and "assignment" have planning logic in Phase 2 -- "vocabulary"
+// and "other" are recognized but deliberately have no planner yet.
+export const GOAL_TYPES = ["exam", "assignment", "vocabulary", "other"] as const;
+export type GoalType = (typeof GOAL_TYPES)[number];
+
+export const PLANNABLE_GOAL_TYPES = ["exam", "assignment"] as const satisfies readonly GoalType[];
+export type PlannableGoalType = (typeof PLANNABLE_GOAL_TYPES)[number];
+
+export function hasPlanningSupport(goalType: string): goalType is PlannableGoalType {
+  return (PLANNABLE_GOAL_TYPES as readonly string[]).includes(goalType);
+}
+
 type PlanTopic = { title: string; tasks: { title: string; estimated_minutes: number }[] };
 type PlanResult = { topics: PlanTopic[] };
 
-function daysBetween(fromISO: string, toISO: string): string[] {
+export function daysBetween(fromISO: string, toISO: string): string[] {
   const from = new Date(fromISO + "T00:00:00Z");
   const to = new Date(toISO + "T00:00:00Z");
   const days: string[] = [];
@@ -76,7 +89,7 @@ async function generatePlanWithAI(input: {
   return object as PlanResult;
 }
 
-function distributeTasks(plan: PlanResult, days: string[]) {
+export function distributeTasks(plan: PlanResult, days: string[]) {
   // Reserve last day (day before exam) as rest day if we have >= 3 days.
   const studyDays = days.length >= 3 ? days.slice(0, -1) : days;
   const flat: { topicIndex: number; task: PlanTopic["tasks"][number] }[] = [];
@@ -87,6 +100,53 @@ function distributeTasks(plan: PlanResult, days: string[]) {
     distribution.push({ day, topicIndex: item.topicIndex, task: item.task, order: idx });
   });
   return distribution;
+}
+
+// --- Assignment planner: deterministic, no AI. Deliberately simple: a
+// small, fixed number of identical study sessions clustered on the days
+// leading up to (and including) the due date. No topics, no tutor/exercise
+// data -- just plain study sessions the student can check off. ---
+
+const newAssignmentSchema = z.object({
+  subject: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(2000),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export type AssignmentSession = {
+  day: string;
+  title: string;
+  estimated_minutes: number;
+  order: number;
+};
+
+const ASSIGNMENT_MAX_SESSIONS = 3;
+const ASSIGNMENT_SESSION_MINUTES = 20;
+
+export function planAssignmentSessions(input: {
+  description: string;
+  days: string[];
+}): AssignmentSession[] {
+  const sessionCount = Math.min(input.days.length, ASSIGNMENT_MAX_SESSIONS);
+  // Cluster sessions on the days closest to (and including) the due date.
+  const sessionDays = input.days.slice(-sessionCount);
+  return sessionDays.map((day, i) => ({
+    day,
+    title: input.description,
+    estimated_minutes: ASSIGNMENT_SESSION_MINUTES,
+    order: i,
+  }));
+}
+
+export function buildAssignmentTaskRows(goalId: string, sessions: AssignmentSession[]) {
+  return sessions.map((s) => ({
+    goal_id: goalId,
+    topic_id: null as string | null,
+    day_date: s.day,
+    title: s.title,
+    estimated_minutes: s.estimated_minutes,
+    order: s.order,
+  }));
 }
 
 export const createExam = createServerFn({ method: "POST" })
@@ -144,6 +204,36 @@ export const createExam = createServerFn({ method: "POST" })
     if (tasksErr) throw new Error(tasksErr.message);
 
     return { id: examRow.id };
+  });
+
+export const createAssignment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => newAssignmentSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (data.due_date < today) throw new Error("Förfallodatumet måste vara idag eller senare.");
+
+    const days = daysBetween(today, data.due_date);
+    const sessions = planAssignmentSessions({ description: data.description, days });
+
+    const { data: goalRow, error: goalErr } = await context.supabase
+      .from("exams")
+      .insert({
+        user_id: context.userId,
+        subject: data.subject,
+        description: data.description,
+        due_date: data.due_date,
+        goal_type: "assignment",
+      })
+      .select("id")
+      .single();
+    if (goalErr || !goalRow) throw new Error(goalErr?.message ?? "Kunde inte spara uppgiften.");
+
+    const tasksToInsert = buildAssignmentTaskRows(goalRow.id, sessions);
+    const { error: tasksErr } = await context.supabase.from("tasks").insert(tasksToInsert);
+    if (tasksErr) throw new Error(tasksErr.message);
+
+    return { id: goalRow.id };
   });
 
 export const listExams = createServerFn({ method: "GET" })
