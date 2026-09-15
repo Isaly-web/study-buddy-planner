@@ -113,7 +113,8 @@ export const createExam = createServerFn({ method: "POST" })
         subject: data.subject,
         grade: data.grade ?? null,
         description: data.description,
-        exam_date: data.exam_date,
+        due_date: data.exam_date,
+        goal_type: "exam",
       })
       .select("id")
       .single();
@@ -122,7 +123,7 @@ export const createExam = createServerFn({ method: "POST" })
     const { data: topicRows, error: topicErr } = await context.supabase
       .from("topics")
       .insert(
-        plan.topics.map((t, i) => ({ exam_id: examRow.id, title: t.title, order: i })),
+        plan.topics.map((t, i) => ({ goal_id: examRow.id, title: t.title, order: i })),
       )
       .select("id, order");
     if (topicErr || !topicRows) throw new Error(topicErr?.message ?? "Kunde inte spara områden.");
@@ -132,7 +133,7 @@ export const createExam = createServerFn({ method: "POST" })
 
     const distribution = distributeTasks(plan, days);
     const tasksToInsert = distribution.map((d) => ({
-      exam_id: examRow.id,
+      goal_id: examRow.id,
       topic_id: topicIdByIndex.get(d.topicIndex) ?? null,
       day_date: d.day,
       title: d.task.title,
@@ -150,8 +151,8 @@ export const listExams = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data: exams, error } = await context.supabase
       .from("exams")
-      .select("id, subject, grade, exam_date, share_token, created_at")
-      .order("exam_date", { ascending: true });
+      .select("id, subject, grade, due_date, share_token, created_at")
+      .order("due_date", { ascending: true });
     if (error) throw new Error(error.message);
 
     const ids = (exams ?? []).map((e) => e.id);
@@ -159,19 +160,24 @@ export const listExams = createServerFn({ method: "GET" })
     if (ids.length) {
       const { data: tasks, error: tErr } = await context.supabase
         .from("tasks")
-        .select("exam_id, completed_at")
-        .in("exam_id", ids);
+        .select("goal_id, completed_at")
+        .in("goal_id", ids);
       if (tErr) throw new Error(tErr.message);
       for (const t of tasks ?? []) {
-        const c = counts[t.exam_id] ?? { total: 0, done: 0 };
+        const c = counts[t.goal_id] ?? { total: 0, done: 0 };
         c.total += 1;
         if (t.completed_at) c.done += 1;
-        counts[t.exam_id] = c;
+        counts[t.goal_id] = c;
       }
     }
 
     return (exams ?? []).map((e) => ({
-      ...e,
+      id: e.id,
+      subject: e.subject,
+      grade: e.grade,
+      exam_date: e.due_date as string,
+      share_token: e.share_token,
+      created_at: e.created_at,
       total_tasks: counts[e.id]?.total ?? 0,
       done_tasks: counts[e.id]?.done ?? 0,
     }));
@@ -183,7 +189,7 @@ export const getTodayTasks = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, completed_at, exam_id, day_date, exams!inner(subject, user_id)")
+      .select("id, title, estimated_minutes, completed_at, goal_id, day_date, exams!inner(subject, user_id)")
       .eq("day_date", today)
       .eq("exams.user_id", context.userId)
       .order("order", { ascending: true });
@@ -193,7 +199,7 @@ export const getTodayTasks = createServerFn({ method: "GET" })
       title: row.title as string,
       estimated_minutes: row.estimated_minutes as number,
       completed_at: row.completed_at as string | null,
-      exam_id: row.exam_id as string,
+      exam_id: row.goal_id as string,
       subject: row.exams.subject as string,
     }));
   });
@@ -250,7 +256,7 @@ export const generateExercises = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, topic_id, exam_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select("id, title, estimated_minutes, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error(tErr?.message ?? "Uppgiften hittades inte.");
@@ -313,7 +319,7 @@ export const gradeAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error(tErr?.message ?? "Uppgiften hittades inte.");
@@ -378,7 +384,7 @@ export const coachAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -442,7 +448,7 @@ export const generateVariantQuestion = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -492,7 +498,7 @@ export const generateLesson = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, topic_id, exam_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select("id, title, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -574,7 +580,7 @@ async function loadExamBundle(
 ) {
   let q = client
     .from("exams")
-    .select("id, subject, grade, description, exam_date, share_token, user_id")
+    .select("id, subject, grade, description, due_date, share_token, user_id")
     .eq("id", examId);
   if (opts.ownerId) q = q.eq("user_id", opts.ownerId);
   const { data: exam, error } = await q.maybeSingle();
@@ -582,11 +588,11 @@ async function loadExamBundle(
   if (!exam) throw new Error("Provet hittades inte.");
 
   const [{ data: topics, error: tErr }, { data: tasks, error: kErr }] = await Promise.all([
-    client.from("topics").select("id, title, order").eq("exam_id", examId).order("order"),
+    client.from("topics").select("id, title, order").eq("goal_id", examId).order("order"),
     client
       .from("tasks")
       .select("id, title, estimated_minutes, completed_at, day_date, topic_id, order")
-      .eq("exam_id", examId)
+      .eq("goal_id", examId)
       .order("day_date")
       .order("order"),
   ]);
@@ -599,7 +605,7 @@ async function loadExamBundle(
       subject: exam.subject as string,
       grade: (exam.grade as string | null) ?? null,
       description: (exam.description as string | null) ?? null,
-      exam_date: exam.exam_date as string,
+      exam_date: exam.due_date as string,
       share_token: opts.shared ? null : (exam.share_token as string),
     },
     topics: (topics ?? []) as { id: string; title: string; order: number }[],

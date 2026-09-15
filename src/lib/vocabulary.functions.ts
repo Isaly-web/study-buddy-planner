@@ -47,7 +47,7 @@ export const listVocabularyOverview = createServerFn({ method: "GET" })
     const { data: topics, error: topicsErr } = await context.supabase
       .from("topics")
       .select("id, title")
-      .eq("exam_id", data.exam_id);
+      .eq("goal_id", data.exam_id);
     if (topicsErr) throw new Error(topicsErr.message);
     if (!topics || topics.length === 0) return [];
 
@@ -133,7 +133,7 @@ export const listVocabularyPracticeItems = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<VocabularyPracticeItem[]> => {
     const { data: topics, error: topicsErr } = await context.supabase
       .from("topics")
-      .select("id, title, exam_id, exams!inner(subject, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, user_id)")
       .eq("exams.user_id", context.userId);
     if (topicsErr) throw new Error(topicsErr.message);
     if (!topics || topics.length === 0) return [];
@@ -191,7 +191,7 @@ export const listVocabularyPracticeItems = createServerFn({ method: "GET" })
         return {
           topic_id: topic.id as string,
           topic_title: topic.title as string,
-          exam_id: topic.exam_id as string,
+          exam_id: topic.goal_id as string,
           exam_subject: topic.exams.subject as string,
           term_count: termCount,
           accuracy:

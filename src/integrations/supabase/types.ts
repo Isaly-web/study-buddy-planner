@@ -12,7 +12,8 @@ export type Database = {
         Row: {
           created_at: string;
           description: string | null;
-          exam_date: string;
+          due_date: string | null;
+          goal_type: string;
           grade: string | null;
           id: string;
           share_token: string;
@@ -22,7 +23,8 @@ export type Database = {
         Insert: {
           created_at?: string;
           description?: string | null;
-          exam_date: string;
+          due_date?: string | null;
+          goal_type?: string;
           grade?: string | null;
           id?: string;
           share_token?: string;
@@ -32,7 +34,8 @@ export type Database = {
         Update: {
           created_at?: string;
           description?: string | null;
-          exam_date?: string;
+          due_date?: string | null;
+          goal_type?: string;
           grade?: string | null;
           id?: string;
           share_token?: string;
@@ -112,7 +115,7 @@ export type Database = {
           created_at: string;
           day_date: string;
           estimated_minutes: number;
-          exam_id: string;
+          goal_id: string;
           id: string;
           order: number;
           title: string;
@@ -123,7 +126,7 @@ export type Database = {
           created_at?: string;
           day_date: string;
           estimated_minutes?: number;
-          exam_id: string;
+          goal_id: string;
           id?: string;
           order?: number;
           title: string;
@@ -134,7 +137,7 @@ export type Database = {
           created_at?: string;
           day_date?: string;
           estimated_minutes?: number;
-          exam_id?: string;
+          goal_id?: string;
           id?: string;
           order?: number;
           title?: string;
@@ -142,8 +145,8 @@ export type Database = {
         };
         Relationships: [
           {
-            foreignKeyName: "tasks_exam_id_fkey";
-            columns: ["exam_id"];
+            foreignKeyName: "tasks_goal_id_fkey";
+            columns: ["goal_id"];
             isOneToOne: false;
             referencedRelation: "exams";
             referencedColumns: ["id"];
@@ -160,29 +163,29 @@ export type Database = {
       topics: {
         Row: {
           created_at: string;
-          exam_id: string;
+          goal_id: string;
           id: string;
           order: number;
           title: string;
         };
         Insert: {
           created_at?: string;
-          exam_id: string;
+          goal_id: string;
           id?: string;
           order?: number;
           title: string;
         };
         Update: {
           created_at?: string;
-          exam_id?: string;
+          goal_id?: string;
           id?: string;
           order?: number;
           title?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "topics_exam_id_fkey";
-            columns: ["exam_id"];
+            foreignKeyName: "topics_goal_id_fkey";
+            columns: ["goal_id"];
             isOneToOne: false;
             referencedRelation: "exams";
             referencedColumns: ["id"];
@@ -225,22 +228,25 @@ export type Database = {
         Row: {
           created_at: string;
           id: string;
+          subject: string | null;
           title: string;
-          topic_id: string;
+          topic_id: string | null;
           user_id: string;
         };
         Insert: {
           created_at?: string;
           id?: string;
+          subject?: string | null;
           title: string;
-          topic_id: string;
+          topic_id?: string | null;
           user_id: string;
         };
         Update: {
           created_at?: string;
           id?: string;
+          subject?: string | null;
           title?: string;
-          topic_id?: string;
+          topic_id?: string | null;
           user_id?: string;
         };
         Relationships: [
