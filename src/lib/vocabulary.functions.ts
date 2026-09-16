@@ -202,6 +202,100 @@ export const listVocabularyPracticeItems = createServerFn({ method: "GET" })
       .sort((a, b) => (a.accuracy ?? -1) - (b.accuracy ?? -1));
   });
 
+// --- Standalone vocabulary decks (Phase 4): not linked to any exam topic. ---
+
+export const createVocabularyDeckSchema = z.object({
+  subject: z.string().trim().min(1).max(100),
+  title: z.string().trim().min(1).max(200),
+});
+
+export const createVocabularyDeck = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => createVocabularyDeckSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { data: created, error } = await context.supabase
+      .from("vocabulary_sets")
+      .insert({
+        topic_id: null,
+        user_id: context.userId,
+        title: data.title,
+        subject: data.subject,
+      })
+      .select("id, topic_id, title, subject, created_at")
+      .single();
+    if (error || !created) throw new Error(error?.message ?? "Kunde inte skapa ordlistan.");
+    return created;
+  });
+
+export type StandaloneVocabularyDeck = {
+  set_id: string;
+  title: string;
+  subject: string | null;
+  term_count: number;
+  accuracy: number | null;
+};
+
+// Lists the current user's standalone vocabulary decks (topic_id IS NULL),
+// e.g. created via Add -> Vocabulary. Deliberately separate from
+// listVocabularyPracticeItems, which only ever surfaces topic-linked sets.
+export const listStandaloneVocabularyDecks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<StandaloneVocabularyDeck[]> => {
+    const { data: sets, error: setsErr } = await context.supabase
+      .from("vocabulary_sets")
+      .select("id, title, subject")
+      .eq("user_id", context.userId)
+      .is("topic_id", null)
+      .order("created_at", { ascending: false });
+    if (setsErr) throw new Error(setsErr.message);
+    if (!sets || sets.length === 0) return [];
+
+    const setIds = sets.map((s) => s.id);
+    const { data: terms, error: termsErr } = await context.supabase
+      .from("vocabulary_terms")
+      .select("id, vocabulary_set_id")
+      .in("vocabulary_set_id", setIds);
+    if (termsErr) throw new Error(termsErr.message);
+
+    const termIds = (terms ?? []).map((t) => t.id);
+    let attempts: { term_id: string; is_correct: boolean }[] = [];
+    if (termIds.length > 0) {
+      const { data: attemptRows, error: attemptsErr } = await context.supabase
+        .from("vocabulary_attempts")
+        .select("term_id, is_correct")
+        .in("term_id", termIds);
+      if (attemptsErr) throw new Error(attemptsErr.message);
+      attempts = attemptRows ?? [];
+    }
+
+    const termsBySet = new Map<string, number>();
+    for (const t of terms ?? [])
+      termsBySet.set(t.vocabulary_set_id, (termsBySet.get(t.vocabulary_set_id) ?? 0) + 1);
+    const setIdByTermId = new Map((terms ?? []).map((t) => [t.id, t.vocabulary_set_id]));
+
+    const statsBySet = new Map<string, { attempts: number; correct: number }>();
+    for (const a of attempts) {
+      const setId = setIdByTermId.get(a.term_id);
+      if (!setId) continue;
+      const s = statsBySet.get(setId) ?? { attempts: 0, correct: 0 };
+      s.attempts += 1;
+      if (a.is_correct) s.correct += 1;
+      statsBySet.set(setId, s);
+    }
+
+    return sets.map((s) => {
+      const stats = statsBySet.get(s.id);
+      return {
+        set_id: s.id,
+        title: s.title,
+        subject: s.subject,
+        term_count: termsBySet.get(s.id) ?? 0,
+        accuracy:
+          stats && stats.attempts > 0 ? Math.round((stats.correct / stats.attempts) * 100) : null,
+      };
+    });
+  });
+
 export const getOrCreateVocabularySet = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>

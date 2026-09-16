@@ -29,11 +29,16 @@ import { useTranslation } from "@/lib/i18n";
 
 export function VocabularyPracticeDialog({
   topicId,
+  vocabularySetId,
   topicTitle,
   open,
   onOpenChange,
 }: {
   topicId: string | null;
+  // When provided, this exact set is practiced directly (standalone decks --
+  // no topic to resolve from). Otherwise falls back to the existing
+  // topic-based getOrCreateVocabularySet behavior, unchanged.
+  vocabularySetId?: string | null;
   topicTitle: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -49,8 +54,10 @@ export function VocabularyPracticeDialog({
   } = useQuery({
     queryKey: ["vocabulary-set", topicId],
     queryFn: () => getOrCreateFn({ data: { topic_id: topicId!, title: topicTitle } }),
-    enabled: open && !!topicId,
+    enabled: open && !!topicId && !vocabularySetId,
   });
+
+  const setId = vocabularySetId ?? set?.id ?? null;
 
   const listTermsFn = useServerFn(listVocabularyTerms);
   const {
@@ -58,9 +65,9 @@ export function VocabularyPracticeDialog({
     isError: termsIsError,
     refetch: refetchTerms,
   } = useQuery({
-    queryKey: ["vocabulary-terms", set?.id],
-    queryFn: () => listTermsFn({ data: { vocabulary_set_id: set!.id } }),
-    enabled: !!set?.id,
+    queryKey: ["vocabulary-terms", setId],
+    queryFn: () => listTermsFn({ data: { vocabulary_set_id: setId! } }),
+    enabled: !!setId,
   });
 
   const recordFn = useServerFn(recordVocabularyAttempt);

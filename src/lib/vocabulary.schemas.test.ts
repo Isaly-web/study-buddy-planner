@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createVocabularyTermSchema,
+  createVocabularyDeckSchema,
   recordVocabularyAttemptSchema,
   updateVocabularyTermSchema,
   vocabularyImportWordSchema,
@@ -9,6 +10,46 @@ import {
   extractVocabularyFromImageSchema,
   bulkCreateVocabularyTermsSchema,
 } from "./vocabulary.functions";
+
+describe("createVocabularyDeckSchema (Phase 4: standalone vocabulary decks)", () => {
+  it("accepts a valid subject and title", () => {
+    expect(() =>
+      createVocabularyDeckSchema.parse({ subject: "Engelska", title: "Glosor vecka 3" }),
+    ).not.toThrow();
+  });
+
+  it("trims subject and title", () => {
+    const result = createVocabularyDeckSchema.parse({
+      subject: "  Engelska  ",
+      title: "  Glosor vecka 3  ",
+    });
+    expect(result).toEqual({ subject: "Engelska", title: "Glosor vecka 3" });
+  });
+
+  it("rejects an empty subject", () => {
+    expect(() =>
+      createVocabularyDeckSchema.parse({ subject: "", title: "Glosor vecka 3" }),
+    ).toThrow();
+  });
+
+  it("rejects an empty title", () => {
+    expect(() => createVocabularyDeckSchema.parse({ subject: "Engelska", title: "" })).toThrow();
+  });
+
+  it("rejects a missing subject or title", () => {
+    expect(() => createVocabularyDeckSchema.parse({ title: "Glosor vecka 3" })).toThrow();
+    expect(() => createVocabularyDeckSchema.parse({ subject: "Engelska" })).toThrow();
+  });
+
+  it("rejects an overly long subject or title", () => {
+    expect(() =>
+      createVocabularyDeckSchema.parse({ subject: "a".repeat(101), title: "Glosor" }),
+    ).toThrow();
+    expect(() =>
+      createVocabularyDeckSchema.parse({ subject: "Engelska", title: "a".repeat(201) }),
+    ).toThrow();
+  });
+});
 
 describe("createVocabularyTermSchema", () => {
   const valid = {

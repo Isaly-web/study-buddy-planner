@@ -8,7 +8,10 @@ import {
   deleteExam,
   supportsExerciseTutor,
 } from "@/lib/exams.functions";
-import { listVocabularyPracticeItems } from "@/lib/vocabulary.functions";
+import {
+  listVocabularyPracticeItems,
+  listStandaloneVocabularyDecks,
+} from "@/lib/vocabulary.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -20,6 +23,7 @@ import { readinessLabel, daysUntil } from "@/lib/study-helpers";
 import { useState } from "react";
 import { ExercisesDialog } from "@/components/ExercisesDialog";
 import { VocabularyPracticeDialog } from "@/components/VocabularyPracticeDialog";
+import { VocabularySetDialog } from "@/components/VocabularySetDialog";
 import { analytics } from "@/lib/analytics-sdk";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -34,14 +38,21 @@ function Dashboard() {
   const toggleFn = useServerFn(toggleTask);
   const deleteFn = useServerFn(deleteExam);
   const vocabPracticeFn = useServerFn(listVocabularyPracticeItems);
+  const standaloneDecksFn = useServerFn(listStandaloneVocabularyDecks);
   const [exercise, setExercise] = useState<{ id: string; title: string } | null>(null);
   const [vocabPractice, setVocabPractice] = useState<{ id: string; title: string } | null>(null);
+  const [deckManage, setDeckManage] = useState<{ id: string; title: string } | null>(null);
+  const [deckPractice, setDeckPractice] = useState<{ id: string; title: string } | null>(null);
 
   const exams = useQuery({ queryKey: ["exams"], queryFn: () => listFn() });
   const today = useQuery({ queryKey: ["today"], queryFn: () => todayFn() });
   const vocab = useQuery({
     queryKey: ["vocabulary-overview", "all"],
     queryFn: () => vocabPracticeFn(),
+  });
+  const standaloneDecks = useQuery({
+    queryKey: ["vocabulary-standalone"],
+    queryFn: () => standaloneDecksFn(),
   });
 
   const toggle = useMutation({
@@ -125,30 +136,47 @@ function Dashboard() {
         </section>
 
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-semibold">Öva ordförråd</h2>
-          {vocab.isLoading ? (
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold">Öva ordförråd</h2>
+            <Link to="/add">
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4" />
+                Ny ordlista
+              </Button>
+            </Link>
+          </div>
+          {vocab.isLoading || standaloneDecks.isLoading ? (
             <Card className="p-5">
               <p className="text-sm text-muted-foreground">Laddar…</p>
             </Card>
-          ) : vocab.isError ? (
+          ) : vocab.isError || standaloneDecks.isError ? (
             <Card className="p-5 text-center">
               <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">
                 Kunde inte ladda ordförrådet.
               </p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={() => vocab.refetch()}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => {
+                  vocab.refetch();
+                  standaloneDecks.refetch();
+                }}
+              >
                 Försök igen
               </Button>
             </Card>
-          ) : !vocab.data?.length ? (
+          ) : !vocab.data?.length && !standaloneDecks.data?.length ? (
             <Card className="p-5">
               <p className="text-sm text-muted-foreground">
-                Inget ordförråd att öva ännu. Lägg till ord under ett prov för att börja öva här.
+                Inget ordförråd att öva ännu. Lägg till ord under ett prov, eller skapa en egen
+                ordlista.
               </p>
             </Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {vocab.data.map((v) => (
+              {(vocab.data ?? []).map((v) => (
                 <Card key={v.topic_id} className="p-5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -168,6 +196,37 @@ function Dashboard() {
                     <BookOpenText className="h-4 w-4" />
                     Öva
                   </Button>
+                </Card>
+              ))}
+              {(standaloneDecks.data ?? []).map((d) => (
+                <Card key={d.set_id} className="p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-semibold">{d.title}</h3>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{d.subject}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {d.term_count} ord ·{" "}
+                    {d.accuracy !== null ? `${d.accuracy}% rätt` : "Inte övat än"}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDeckManage({ id: d.set_id, title: d.title })}
+                    >
+                      Hantera ord
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={d.term_count === 0}
+                      onClick={() => setDeckPractice({ id: d.set_id, title: d.title })}
+                    >
+                      <BookOpenText className="h-4 w-4" />
+                      Öva
+                    </Button>
+                  </div>
                 </Card>
               ))}
             </div>
@@ -274,6 +333,25 @@ function Dashboard() {
         topicTitle={vocabPractice?.title ?? ""}
         open={!!vocabPractice}
         onOpenChange={(v) => !v && setVocabPractice(null)}
+      />
+      <VocabularySetDialog
+        topicId={null}
+        vocabularySetId={deckManage?.id ?? null}
+        topicTitle={deckManage?.title ?? ""}
+        open={!!deckManage}
+        onOpenChange={(v) => {
+          if (!v) {
+            setDeckManage(null);
+            qc.invalidateQueries({ queryKey: ["vocabulary-standalone"] });
+          }
+        }}
+      />
+      <VocabularyPracticeDialog
+        topicId={null}
+        vocabularySetId={deckPractice?.id ?? null}
+        topicTitle={deckPractice?.title ?? ""}
+        open={!!deckPractice}
+        onOpenChange={(v) => !v && setDeckPractice(null)}
       />
     </div>
   );
