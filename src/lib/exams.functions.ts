@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { getWeekStart } from "./plan-helpers";
 
 const newExamSchema = z.object({
   subject: z.string().trim().min(1).max(100),
@@ -9,10 +10,44 @@ const newExamSchema = z.object({
   exam_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+// The full set of goal types the data model recognizes (Phase 1). Only
+// "exam" and "assignment" have planning logic in Phase 2 -- "vocabulary"
+// and "other" are recognized but deliberately have no planner yet.
+export const GOAL_TYPES = ["exam", "assignment", "vocabulary", "other"] as const;
+export type GoalType = (typeof GOAL_TYPES)[number];
+
+export const PLANNABLE_GOAL_TYPES = ["exam", "assignment"] as const satisfies readonly GoalType[];
+export type PlannableGoalType = (typeof PLANNABLE_GOAL_TYPES)[number];
+
+export function hasPlanningSupport(goalType: string): goalType is PlannableGoalType {
+  return (PLANNABLE_GOAL_TYPES as readonly string[]).includes(goalType);
+}
+
+// The AI exercise/tutor feature (generateExercises/gradeAnswer/coachAnswer/...)
+// is exam-specific: it grades against Lgr22 E/C/A criteria, which makes no
+// sense for a plain assignment. Only "exam" goals get it in Phase 3.
+export function supportsExerciseTutor(goalType: string): boolean {
+  return goalType === "exam";
+}
+
+// Swedish display label for a goal type (Phase 5 Plan view).
+export function goalTypeLabel(goalType: string): string {
+  switch (goalType) {
+    case "exam":
+      return "Prov";
+    case "assignment":
+      return "Läxa";
+    case "vocabulary":
+      return "Ordförråd";
+    default:
+      return "Övrigt";
+  }
+}
+
 type PlanTopic = { title: string; tasks: { title: string; estimated_minutes: number }[] };
 type PlanResult = { topics: PlanTopic[] };
 
-function daysBetween(fromISO: string, toISO: string): string[] {
+export function daysBetween(fromISO: string, toISO: string): string[] {
   const from = new Date(fromISO + "T00:00:00Z");
   const to = new Date(toISO + "T00:00:00Z");
   const days: string[] = [];
@@ -76,7 +111,7 @@ async function generatePlanWithAI(input: {
   return object as PlanResult;
 }
 
-function distributeTasks(plan: PlanResult, days: string[]) {
+export function distributeTasks(plan: PlanResult, days: string[]) {
   // Reserve last day (day before exam) as rest day if we have >= 3 days.
   const studyDays = days.length >= 3 ? days.slice(0, -1) : days;
   const flat: { topicIndex: number; task: PlanTopic["tasks"][number] }[] = [];
@@ -87,6 +122,53 @@ function distributeTasks(plan: PlanResult, days: string[]) {
     distribution.push({ day, topicIndex: item.topicIndex, task: item.task, order: idx });
   });
   return distribution;
+}
+
+// --- Assignment planner: deterministic, no AI. Deliberately simple: a
+// small, fixed number of identical study sessions clustered on the days
+// leading up to (and including) the due date. No topics, no tutor/exercise
+// data -- just plain study sessions the student can check off. ---
+
+const newAssignmentSchema = z.object({
+  subject: z.string().trim().min(1).max(100),
+  description: z.string().trim().min(1).max(2000),
+  due_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+export type AssignmentSession = {
+  day: string;
+  title: string;
+  estimated_minutes: number;
+  order: number;
+};
+
+const ASSIGNMENT_MAX_SESSIONS = 3;
+const ASSIGNMENT_SESSION_MINUTES = 20;
+
+export function planAssignmentSessions(input: {
+  description: string;
+  days: string[];
+}): AssignmentSession[] {
+  const sessionCount = Math.min(input.days.length, ASSIGNMENT_MAX_SESSIONS);
+  // Cluster sessions on the days closest to (and including) the due date.
+  const sessionDays = input.days.slice(-sessionCount);
+  return sessionDays.map((day, i) => ({
+    day,
+    title: input.description,
+    estimated_minutes: ASSIGNMENT_SESSION_MINUTES,
+    order: i,
+  }));
+}
+
+export function buildAssignmentTaskRows(goalId: string, sessions: AssignmentSession[]) {
+  return sessions.map((s) => ({
+    goal_id: goalId,
+    topic_id: null as string | null,
+    day_date: s.day,
+    title: s.title,
+    estimated_minutes: s.estimated_minutes,
+    order: s.order,
+  }));
 }
 
 export const createExam = createServerFn({ method: "POST" })
@@ -113,7 +195,8 @@ export const createExam = createServerFn({ method: "POST" })
         subject: data.subject,
         grade: data.grade ?? null,
         description: data.description,
-        exam_date: data.exam_date,
+        due_date: data.exam_date,
+        goal_type: "exam",
       })
       .select("id")
       .single();
@@ -122,7 +205,7 @@ export const createExam = createServerFn({ method: "POST" })
     const { data: topicRows, error: topicErr } = await context.supabase
       .from("topics")
       .insert(
-        plan.topics.map((t, i) => ({ exam_id: examRow.id, title: t.title, order: i })),
+        plan.topics.map((t, i) => ({ goal_id: examRow.id, title: t.title, order: i })),
       )
       .select("id, order");
     if (topicErr || !topicRows) throw new Error(topicErr?.message ?? "Kunde inte spara områden.");
@@ -132,7 +215,7 @@ export const createExam = createServerFn({ method: "POST" })
 
     const distribution = distributeTasks(plan, days);
     const tasksToInsert = distribution.map((d) => ({
-      exam_id: examRow.id,
+      goal_id: examRow.id,
       topic_id: topicIdByIndex.get(d.topicIndex) ?? null,
       day_date: d.day,
       title: d.task.title,
@@ -145,13 +228,43 @@ export const createExam = createServerFn({ method: "POST" })
     return { id: examRow.id };
   });
 
+export const createAssignment = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => newAssignmentSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const today = new Date().toISOString().slice(0, 10);
+    if (data.due_date < today) throw new Error("Förfallodatumet måste vara idag eller senare.");
+
+    const days = daysBetween(today, data.due_date);
+    const sessions = planAssignmentSessions({ description: data.description, days });
+
+    const { data: goalRow, error: goalErr } = await context.supabase
+      .from("exams")
+      .insert({
+        user_id: context.userId,
+        subject: data.subject,
+        description: data.description,
+        due_date: data.due_date,
+        goal_type: "assignment",
+      })
+      .select("id")
+      .single();
+    if (goalErr || !goalRow) throw new Error(goalErr?.message ?? "Kunde inte spara uppgiften.");
+
+    const tasksToInsert = buildAssignmentTaskRows(goalRow.id, sessions);
+    const { error: tasksErr } = await context.supabase.from("tasks").insert(tasksToInsert);
+    if (tasksErr) throw new Error(tasksErr.message);
+
+    return { id: goalRow.id };
+  });
+
 export const listExams = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data: exams, error } = await context.supabase
       .from("exams")
-      .select("id, subject, grade, exam_date, share_token, created_at")
-      .order("exam_date", { ascending: true });
+      .select("id, subject, grade, due_date, share_token, created_at, goal_type")
+      .order("due_date", { ascending: true });
     if (error) throw new Error(error.message);
 
     const ids = (exams ?? []).map((e) => e.id);
@@ -159,19 +272,25 @@ export const listExams = createServerFn({ method: "GET" })
     if (ids.length) {
       const { data: tasks, error: tErr } = await context.supabase
         .from("tasks")
-        .select("exam_id, completed_at")
-        .in("exam_id", ids);
+        .select("goal_id, completed_at")
+        .in("goal_id", ids);
       if (tErr) throw new Error(tErr.message);
       for (const t of tasks ?? []) {
-        const c = counts[t.exam_id] ?? { total: 0, done: 0 };
+        const c = counts[t.goal_id] ?? { total: 0, done: 0 };
         c.total += 1;
         if (t.completed_at) c.done += 1;
-        counts[t.exam_id] = c;
+        counts[t.goal_id] = c;
       }
     }
 
     return (exams ?? []).map((e) => ({
-      ...e,
+      id: e.id,
+      subject: e.subject,
+      grade: e.grade,
+      exam_date: e.due_date as string,
+      share_token: e.share_token,
+      created_at: e.created_at,
+      goal_type: e.goal_type as GoalType,
       total_tasks: counts[e.id]?.total ?? 0,
       done_tasks: counts[e.id]?.done ?? 0,
     }));
@@ -183,7 +302,9 @@ export const getTodayTasks = createServerFn({ method: "GET" })
     const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, completed_at, exam_id, day_date, exams!inner(subject, user_id)")
+      .select(
+        "id, title, estimated_minutes, completed_at, goal_id, day_date, exams!inner(subject, user_id, goal_type)",
+      )
       .eq("day_date", today)
       .eq("exams.user_id", context.userId)
       .order("order", { ascending: true });
@@ -193,8 +314,54 @@ export const getTodayTasks = createServerFn({ method: "GET" })
       title: row.title as string,
       estimated_minutes: row.estimated_minutes as number,
       completed_at: row.completed_at as string | null,
-      exam_id: row.exam_id as string,
+      exam_id: row.goal_id as string,
       subject: row.exams.subject as string,
+      goal_type: row.exams.goal_type as GoalType,
+    }));
+  });
+
+export type PlanTask = {
+  id: string;
+  title: string;
+  estimated_minutes: number;
+  completed_at: string | null;
+  goal_id: string;
+  day_date: string;
+  topic_id: string | null;
+  subject: string;
+  goal_type: GoalType;
+};
+
+// General-purpose task query for the unified Plan view (Phase 5): every
+// study session from the start of the current week onward, across every
+// goal type, in one query -- Today/This week/Upcoming are derived from
+// this single result via plan-helpers' pure classification, rather than
+// running three separate overlapping queries.
+export const getPlanTasks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PlanTask[]> => {
+    const today = new Date().toISOString().slice(0, 10);
+    const weekStart = getWeekStart(today);
+    const { data, error } = await context.supabase
+      .from("tasks")
+      .select(
+        "id, title, estimated_minutes, completed_at, goal_id, day_date, topic_id, exams!inner(subject, user_id, goal_type)",
+      )
+      .gte("day_date", weekStart)
+      .eq("exams.user_id", context.userId)
+      .order("day_date", { ascending: true })
+      .order("order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row: any) => ({
+      id: row.id as string,
+      title: row.title as string,
+      estimated_minutes: row.estimated_minutes as number,
+      completed_at: row.completed_at as string | null,
+      goal_id: row.goal_id as string,
+      day_date: row.day_date as string,
+      topic_id: row.topic_id as string | null,
+      subject: row.exams.subject as string,
+      goal_type: row.exams.goal_type as GoalType,
     }));
   });
 
@@ -250,7 +417,7 @@ export const generateExercises = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, topic_id, exam_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select("id, title, estimated_minutes, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error(tErr?.message ?? "Uppgiften hittades inte.");
@@ -313,7 +480,7 @@ export const gradeAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error(tErr?.message ?? "Uppgiften hittades inte.");
@@ -378,7 +545,7 @@ export const coachAnswer = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -442,7 +609,7 @@ export const generateVariantQuestion = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, exam_id, exams!inner(subject, grade, description, user_id)")
+      .select("id, title, goal_id, exams!inner(subject, grade, description, user_id)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -492,7 +659,7 @@ export const generateLesson = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, topic_id, exam_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select("id, title, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -574,7 +741,7 @@ async function loadExamBundle(
 ) {
   let q = client
     .from("exams")
-    .select("id, subject, grade, description, exam_date, share_token, user_id")
+    .select("id, subject, grade, description, due_date, share_token, user_id, goal_type")
     .eq("id", examId);
   if (opts.ownerId) q = q.eq("user_id", opts.ownerId);
   const { data: exam, error } = await q.maybeSingle();
@@ -582,11 +749,11 @@ async function loadExamBundle(
   if (!exam) throw new Error("Provet hittades inte.");
 
   const [{ data: topics, error: tErr }, { data: tasks, error: kErr }] = await Promise.all([
-    client.from("topics").select("id, title, order").eq("exam_id", examId).order("order"),
+    client.from("topics").select("id, title, order").eq("goal_id", examId).order("order"),
     client
       .from("tasks")
       .select("id, title, estimated_minutes, completed_at, day_date, topic_id, order")
-      .eq("exam_id", examId)
+      .eq("goal_id", examId)
       .order("day_date")
       .order("order"),
   ]);
@@ -599,8 +766,9 @@ async function loadExamBundle(
       subject: exam.subject as string,
       grade: (exam.grade as string | null) ?? null,
       description: (exam.description as string | null) ?? null,
-      exam_date: exam.exam_date as string,
+      exam_date: exam.due_date as string,
       share_token: opts.shared ? null : (exam.share_token as string),
+      goal_type: exam.goal_type as GoalType,
     },
     topics: (topics ?? []) as { id: string; title: string; order: number }[],
     tasks: (tasks ?? []) as {

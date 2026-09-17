@@ -40,11 +40,16 @@ type Term = { id: string; term: string; definition: string; example: string | nu
 
 export function VocabularySetDialog({
   topicId,
+  vocabularySetId,
   topicTitle,
   open,
   onOpenChange,
 }: {
   topicId: string | null;
+  // When provided, this exact set is managed directly (standalone decks --
+  // no topic to resolve from). Otherwise falls back to the existing
+  // topic-based getOrCreateVocabularySet behavior, unchanged.
+  vocabularySetId?: string | null;
   topicTitle: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
@@ -56,18 +61,20 @@ export function VocabularySetDialog({
   const { data: set } = useQuery({
     queryKey: ["vocabulary-set", topicId],
     queryFn: () => getOrCreateFn({ data: { topic_id: topicId!, title: topicTitle } }),
-    enabled: open && !!topicId,
+    enabled: open && !!topicId && !vocabularySetId,
   });
+
+  const setId = vocabularySetId ?? set?.id ?? null;
 
   const listTermsFn = useServerFn(listVocabularyTerms);
   const { data: terms, isLoading } = useQuery({
-    queryKey: ["vocabulary-terms", set?.id],
-    queryFn: () => listTermsFn({ data: { vocabulary_set_id: set!.id } }),
-    enabled: !!set?.id,
+    queryKey: ["vocabulary-terms", setId],
+    queryFn: () => listTermsFn({ data: { vocabulary_set_id: setId! } }),
+    enabled: !!setId,
   });
 
   function invalidateAfterChange() {
-    if (set?.id) qc.invalidateQueries({ queryKey: ["vocabulary-terms", set.id] });
+    if (setId) qc.invalidateQueries({ queryKey: ["vocabulary-terms", setId] });
     qc.invalidateQueries({ queryKey: ["vocabulary-overview"] });
   }
 
@@ -130,11 +137,11 @@ export function VocabularySetDialog({
   }, [open]);
 
   function submitNewTerm() {
-    if (!set?.id || !newTerm.trim() || !newDefinition.trim()) return;
+    if (!setId || !newTerm.trim() || !newDefinition.trim()) return;
     createMutation.mutate(
       {
         data: {
-          vocabulary_set_id: set.id,
+          vocabulary_set_id: setId,
           term: newTerm,
           definition: newDefinition,
           example: newExample.trim() ? newExample : null,
@@ -183,9 +190,9 @@ export function VocabularySetDialog({
 
           {isLoading ? (
             <p className="py-6 text-center text-sm text-muted-foreground">{t("loading")}</p>
-          ) : mode === "import" && set?.id ? (
+          ) : mode === "import" && setId ? (
             <VocabularyImportPanel
-              vocabularySetId={set.id}
+              vocabularySetId={setId}
               existingTerms={terms ?? []}
               invalidateAfterChange={invalidateAfterChange}
               onImported={() => setMode("list")}
@@ -259,7 +266,7 @@ export function VocabularySetDialog({
                 variant="outline"
                 size="sm"
                 onClick={() => setMode("import")}
-                disabled={!set?.id}
+                disabled={!setId}
               >
                 <Upload className="h-3.5 w-3.5" /> {t("vocabulary_import_button")}
               </Button>
@@ -344,7 +351,7 @@ export function VocabularySetDialog({
             <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (set?.id) deleteSetMutation.mutate({ data: { id: set.id } });
+                if (setId) deleteSetMutation.mutate({ data: { id: setId } });
                 setConfirmDeleteSet(false);
               }}
             >

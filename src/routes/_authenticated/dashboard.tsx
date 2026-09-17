@@ -1,8 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listExams, getTodayTasks, toggleTask, deleteExam } from "@/lib/exams.functions";
-import { listVocabularyPracticeItems } from "@/lib/vocabulary.functions";
+import {
+  listExams,
+  getTodayTasks,
+  toggleTask,
+  deleteExam,
+  supportsExerciseTutor,
+} from "@/lib/exams.functions";
+import {
+  listVocabularyPracticeItems,
+  listStandaloneVocabularyDecks,
+} from "@/lib/vocabulary.functions";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,6 +23,7 @@ import { readinessLabel, daysUntil } from "@/lib/study-helpers";
 import { useState } from "react";
 import { ExercisesDialog } from "@/components/ExercisesDialog";
 import { VocabularyPracticeDialog } from "@/components/VocabularyPracticeDialog";
+import { VocabularySetDialog } from "@/components/VocabularySetDialog";
 import { analytics } from "@/lib/analytics-sdk";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -28,14 +38,21 @@ function Dashboard() {
   const toggleFn = useServerFn(toggleTask);
   const deleteFn = useServerFn(deleteExam);
   const vocabPracticeFn = useServerFn(listVocabularyPracticeItems);
+  const standaloneDecksFn = useServerFn(listStandaloneVocabularyDecks);
   const [exercise, setExercise] = useState<{ id: string; title: string } | null>(null);
   const [vocabPractice, setVocabPractice] = useState<{ id: string; title: string } | null>(null);
+  const [deckManage, setDeckManage] = useState<{ id: string; title: string } | null>(null);
+  const [deckPractice, setDeckPractice] = useState<{ id: string; title: string } | null>(null);
 
   const exams = useQuery({ queryKey: ["exams"], queryFn: () => listFn() });
   const today = useQuery({ queryKey: ["today"], queryFn: () => todayFn() });
   const vocab = useQuery({
     queryKey: ["vocabulary-overview", "all"],
     queryFn: () => vocabPracticeFn(),
+  });
+  const standaloneDecks = useQuery({
+    queryKey: ["vocabulary-standalone"],
+    queryFn: () => standaloneDecksFn(),
   });
 
   const toggle = useMutation({
@@ -84,7 +101,7 @@ function Dashboard() {
               </div>
             ) : (today.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Inget att göra idag. {exams.data?.length ? "Bra jobbat – ta en paus 🌿" : "Skapa ett prov för att komma igång."}
+                Inget att göra idag. {exams.data?.length ? "Bra jobbat – ta en paus 🌿" : "Lägg till något att plugga för att komma igång."}
               </p>
             ) : (
               <ul className="space-y-2">
@@ -101,14 +118,16 @@ function Dashboard() {
                       </p>
                       <p className="text-xs text-muted-foreground">{t.subject} · {t.estimated_minutes} min</p>
                     </div>
-                    <Button
-                      variant={t.completed_at ? "outline" : "default"}
-                      size="sm"
-                      onClick={() => setExercise({ id: t.id, title: t.title })}
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      {t.completed_at ? "Öva igen" : "Gör uppgift"}
-                    </Button>
+                    {supportsExerciseTutor(t.goal_type) ? (
+                      <Button
+                        variant={t.completed_at ? "outline" : "default"}
+                        size="sm"
+                        onClick={() => setExercise({ id: t.id, title: t.title })}
+                      >
+                        <Sparkles className="h-4 w-4" />
+                        {t.completed_at ? "Öva igen" : "Gör uppgift"}
+                      </Button>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -117,30 +136,47 @@ function Dashboard() {
         </section>
 
         <section className="mt-8">
-          <h2 className="mb-3 text-lg font-semibold">Öva ordförråd</h2>
-          {vocab.isLoading ? (
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <h2 className="text-lg font-semibold">Öva ordförråd</h2>
+            <Link to="/add">
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4" />
+                Ny ordlista
+              </Button>
+            </Link>
+          </div>
+          {vocab.isLoading || standaloneDecks.isLoading ? (
             <Card className="p-5">
               <p className="text-sm text-muted-foreground">Laddar…</p>
             </Card>
-          ) : vocab.isError ? (
+          ) : vocab.isError || standaloneDecks.isError ? (
             <Card className="p-5 text-center">
               <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">
                 Kunde inte ladda ordförrådet.
               </p>
-              <Button variant="outline" size="sm" className="mt-3" onClick={() => vocab.refetch()}>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => {
+                  vocab.refetch();
+                  standaloneDecks.refetch();
+                }}
+              >
                 Försök igen
               </Button>
             </Card>
-          ) : !vocab.data?.length ? (
+          ) : !vocab.data?.length && !standaloneDecks.data?.length ? (
             <Card className="p-5">
               <p className="text-sm text-muted-foreground">
-                Inget ordförråd att öva ännu. Lägg till ord under ett prov för att börja öva här.
+                Inget ordförråd att öva ännu. Lägg till ord under ett prov, eller skapa en egen
+                ordlista.
               </p>
             </Card>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
-              {vocab.data.map((v) => (
+              {(vocab.data ?? []).map((v) => (
                 <Card key={v.topic_id} className="p-5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
@@ -162,18 +198,49 @@ function Dashboard() {
                   </Button>
                 </Card>
               ))}
+              {(standaloneDecks.data ?? []).map((d) => (
+                <Card key={d.set_id} className="p-5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h3 className="truncate text-base font-semibold">{d.title}</h3>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{d.subject}</p>
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {d.term_count} ord ·{" "}
+                    {d.accuracy !== null ? `${d.accuracy}% rätt` : "Inte övat än"}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setDeckManage({ id: d.set_id, title: d.title })}
+                    >
+                      Hantera ord
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={d.term_count === 0}
+                      onClick={() => setDeckPractice({ id: d.set_id, title: d.title })}
+                    >
+                      <BookOpenText className="h-4 w-4" />
+                      Öva
+                    </Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </section>
 
         <section className="mt-8">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-semibold">Kommande prov</h2>
+            <h2 className="text-lg font-semibold">Kommande</h2>
             {exams.data?.length ? (
-              <Link to="/exam/new">
+              <Link to="/add">
                 <Button variant="outline" size="sm">
                   <Plus className="h-4 w-4" />
-                  Nytt prov
+                  Lägg till
                 </Button>
               </Link>
             ) : null}
@@ -183,7 +250,7 @@ function Dashboard() {
           ) : exams.isError ? (
             <Card className="p-8 text-center">
               <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Kunde inte ladda proven.</p>
+              <p className="mt-2 text-sm text-muted-foreground">Kunde inte ladda dina mål.</p>
               <Button variant="outline" size="sm" className="mt-3" onClick={() => exams.refetch()}>
                 Försök igen
               </Button>
@@ -191,12 +258,12 @@ function Dashboard() {
           ) : !exams.data?.length ? (
             <Card className="flex flex-col items-center p-10 text-center">
               <Sparkles className="h-8 w-8 text-primary" />
-              <h3 className="mt-3 text-lg font-semibold">Inga prov än</h3>
+              <h3 className="mt-3 text-lg font-semibold">Inget att plugga på än</h3>
               <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-                Lägg till ditt första prov så bygger vi en plan dag-för-dag.
+                Lägg till ett prov eller en läxa så bygger vi en plan dag-för-dag.
               </p>
-              <Link to="/exam/new" className="mt-4">
-                <Button>Skapa provplan</Button>
+              <Link to="/add" className="mt-4">
+                <Button>+ Lägg till</Button>
               </Link>
             </Card>
           ) : (
@@ -204,14 +271,20 @@ function Dashboard() {
               {exams.data.map((e) => {
                 const pct = e.total_tasks > 0 ? Math.round((e.done_tasks / e.total_tasks) * 100) : 0;
                 const dleft = daysUntil(e.exam_date);
+                const isAssignment = e.goal_type === "assignment";
                 return (
                   <Card key={e.id} className="group relative p-5">
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h3 className="text-lg font-semibold">{e.subject}</h3>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-semibold">{e.subject}</h3>
+                          <span className="rounded-full border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                            {isAssignment ? "Läxa" : "Prov"}
+                          </span>
+                        </div>
                         <p className="mt-0.5 text-xs text-muted-foreground">
                           <CalendarDays className="mr-1 inline h-3 w-3" />
-                          {dleft > 0 ? `${dleft} dagar kvar` : dleft === 0 ? "Idag!" : "Provet är klart"}
+                          {dleft > 0 ? `${dleft} dagar kvar` : dleft === 0 ? "Idag!" : "Klart"}
                         </p>
                       </div>
                       <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-medium text-accent-foreground">
@@ -227,7 +300,7 @@ function Dashboard() {
                     <div className="mt-4">
                       <Link to="/exam/$examId" params={{ examId: e.id }}>
                         <Button size="sm" className="w-full sm:w-auto">
-                          Öppna prov
+                          {isAssignment ? "Öppna läxa" : "Öppna prov"}
                         </Button>
                       </Link>
                     </div>
@@ -238,7 +311,7 @@ function Dashboard() {
                         if (confirm(`Ta bort "${e.subject}"?`)) del.mutate(e.id);
                       }}
                       className="absolute right-3 top-3 rounded-md p-1.5 text-muted-foreground opacity-0 hover:bg-muted hover:text-destructive group-hover:opacity-100"
-                      aria-label="Ta bort prov"
+                      aria-label={isAssignment ? "Ta bort läxa" : "Ta bort prov"}
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -260,6 +333,25 @@ function Dashboard() {
         topicTitle={vocabPractice?.title ?? ""}
         open={!!vocabPractice}
         onOpenChange={(v) => !v && setVocabPractice(null)}
+      />
+      <VocabularySetDialog
+        topicId={null}
+        vocabularySetId={deckManage?.id ?? null}
+        topicTitle={deckManage?.title ?? ""}
+        open={!!deckManage}
+        onOpenChange={(v) => {
+          if (!v) {
+            setDeckManage(null);
+            qc.invalidateQueries({ queryKey: ["vocabulary-standalone"] });
+          }
+        }}
+      />
+      <VocabularyPracticeDialog
+        topicId={null}
+        vocabularySetId={deckPractice?.id ?? null}
+        topicTitle={deckPractice?.title ?? ""}
+        open={!!deckPractice}
+        onOpenChange={(v) => !v && setDeckPractice(null)}
       />
     </div>
   );

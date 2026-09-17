@@ -109,8 +109,8 @@ export const getStats = createServerFn({ method: "GET" })
       context.supabase.from("exams").select("id, subject"),
       context.supabase
         .from("tasks")
-        .select("id, exam_id, topic_id, completed_at, day_date"),
-      context.supabase.from("topics").select("id, exam_id, title"),
+        .select("id, goal_id, topic_id, completed_at, day_date"),
+      context.supabase.from("topics").select("id, goal_id, title"),
       context.supabase
         .from("exercise_attempts")
         .select("task_id, level, score, created_at")
@@ -126,7 +126,7 @@ export const getStats = createServerFn({ method: "GET" })
 
     const subjectByExam = new Map(exams.map((e) => [e.id, e.subject]));
     const topicById = new Map(topics.map((t) => [t.id, t]));
-    const examByTask = new Map(tasks.map((t) => [t.id, t.exam_id]));
+    const examByTask = new Map(tasks.map((t) => [t.id, t.goal_id]));
     const topicByTask = new Map(tasks.map((t) => [t.id, t.topic_id]));
 
     // Totals
@@ -163,7 +163,7 @@ export const getStats = createServerFn({ method: "GET" })
       { total_tasks: number; done_tasks: number; scores: number[]; attempts: number }
     >();
     for (const t of tasks) {
-      const subj = subjectByExam.get(t.exam_id) ?? "Övrigt";
+      const subj = subjectByExam.get(t.goal_id) ?? "Övrigt";
       const a = subjectAgg.get(subj) ?? { total_tasks: 0, done_tasks: 0, scores: [], attempts: 0 };
       a.total_tasks += 1;
       if (t.completed_at) a.done_tasks += 1;
@@ -196,10 +196,10 @@ export const getStats = createServerFn({ method: "GET" })
       if (!t.topic_id) continue;
       const topic = topicById.get(t.topic_id);
       if (!topic) continue;
-      const subj = subjectByExam.get(topic.exam_id) ?? "Övrigt";
+      const subj = subjectByExam.get(topic.goal_id) ?? "Övrigt";
       const key = topic.id;
       const a = topicAgg.get(key) ?? {
-        exam_id: topic.exam_id,
+        exam_id: topic.goal_id,
         subject: subj,
         topic: topic.title,
         total_tasks: 0,
