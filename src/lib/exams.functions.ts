@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
+import { getWeekStart } from "./plan-helpers";
 
 const newExamSchema = z.object({
   subject: z.string().trim().min(1).max(100),
@@ -27,6 +28,20 @@ export function hasPlanningSupport(goalType: string): goalType is PlannableGoalT
 // sense for a plain assignment. Only "exam" goals get it in Phase 3.
 export function supportsExerciseTutor(goalType: string): boolean {
   return goalType === "exam";
+}
+
+// Swedish display label for a goal type (Phase 5 Plan view).
+export function goalTypeLabel(goalType: string): string {
+  switch (goalType) {
+    case "exam":
+      return "Prov";
+    case "assignment":
+      return "Läxa";
+    case "vocabulary":
+      return "Ordförråd";
+    default:
+      return "Övrigt";
+  }
 }
 
 type PlanTopic = { title: string; tasks: { title: string; estimated_minutes: number }[] };
@@ -300,6 +315,51 @@ export const getTodayTasks = createServerFn({ method: "GET" })
       estimated_minutes: row.estimated_minutes as number,
       completed_at: row.completed_at as string | null,
       exam_id: row.goal_id as string,
+      subject: row.exams.subject as string,
+      goal_type: row.exams.goal_type as GoalType,
+    }));
+  });
+
+export type PlanTask = {
+  id: string;
+  title: string;
+  estimated_minutes: number;
+  completed_at: string | null;
+  goal_id: string;
+  day_date: string;
+  topic_id: string | null;
+  subject: string;
+  goal_type: GoalType;
+};
+
+// General-purpose task query for the unified Plan view (Phase 5): every
+// study session from the start of the current week onward, across every
+// goal type, in one query -- Today/This week/Upcoming are derived from
+// this single result via plan-helpers' pure classification, rather than
+// running three separate overlapping queries.
+export const getPlanTasks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<PlanTask[]> => {
+    const today = new Date().toISOString().slice(0, 10);
+    const weekStart = getWeekStart(today);
+    const { data, error } = await context.supabase
+      .from("tasks")
+      .select(
+        "id, title, estimated_minutes, completed_at, goal_id, day_date, topic_id, exams!inner(subject, user_id, goal_type)",
+      )
+      .gte("day_date", weekStart)
+      .eq("exams.user_id", context.userId)
+      .order("day_date", { ascending: true })
+      .order("order", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((row: any) => ({
+      id: row.id as string,
+      title: row.title as string,
+      estimated_minutes: row.estimated_minutes as number,
+      completed_at: row.completed_at as string | null,
+      goal_id: row.goal_id as string,
+      day_date: row.day_date as string,
+      topic_id: row.topic_id as string | null,
       subject: row.exams.subject as string,
       goal_type: row.exams.goal_type as GoalType,
     }));

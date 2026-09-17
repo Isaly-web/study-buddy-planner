@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpenCheck, BarChart3, LogOut, MessageSquare } from "lucide-react";
+import { BookOpenCheck, BarChart3, CalendarDays, LogOut, MessageSquare } from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
 
@@ -21,6 +21,12 @@ export function AppHeader() {
         </Link>
         <div className="flex items-center gap-1">
           <LanguageSwitcher />
+          <Link to="/plan">
+            <Button variant="ghost" size="sm">
+              <CalendarDays className="h-4 w-4" />
+              <span className="ml-1.5 hidden sm:inline">{t("plan")}</span>
+            </Button>
+          </Link>
           <Link to="/stats">
             <Button variant="ghost" size="sm">
               <BarChart3 className="h-4 w-4" />

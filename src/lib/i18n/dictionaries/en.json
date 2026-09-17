@@ -29,6 +29,7 @@
   "required_field": "Required field",
   "error_generic": "Something went wrong",
   "success_generic": "Done",
+  "plan": "Plan",
   "stats": "Stats",
   "feedback": "Feedback",
   "signup_blurb": "Create an account – it takes 10 seconds.",

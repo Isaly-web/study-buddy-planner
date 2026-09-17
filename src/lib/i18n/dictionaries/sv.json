@@ -29,6 +29,7 @@
   "required_field": "Obligatoriskt fält",
   "error_generic": "Något gick fel",
   "success_generic": "Klart",
+  "plan": "Plan",
   "stats": "Statistik",
   "feedback": "Feedback",
   "signup_blurb": "Skapa ett konto – det tar 10 sekunder.",
