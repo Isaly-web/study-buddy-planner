@@ -15,6 +15,11 @@ if [[ -z "${SUPABASE_CHECK_DATABASE_URL:-}" ]]; then
   exit 1
 fi
 
+if [[ ! "$SUPABASE_CHECK_DATABASE_URL" =~ ^postgres(ql)?:// ]]; then
+  echo "::error::SUPABASE_CHECK_DATABASE_URL must be a full connection string starting with postgresql:// (user, password, pooler host, port and database)."
+  exit 1
+fi
+
 # A new branch push has an all-zero base: compare against the parent instead.
 if [[ "$base" =~ ^0+$ ]]; then
   base="$(git rev-parse "$head^" 2>/dev/null || git hash-object -t tree /dev/null)"
@@ -36,8 +41,13 @@ for migration in "${added[@]}"; do
     failed=1
     continue
   fi
-  result="$(PGOPTIONS='-c default_transaction_read_only=on' \
-    psql "$SUPABASE_CHECK_DATABASE_URL" -v ON_ERROR_STOP=1 -At -f "$check" | tail -n 1)" || result="error"
+  if ! output="$(PGOPTIONS='-c default_transaction_read_only=on' \
+    psql "$SUPABASE_CHECK_DATABASE_URL" -v ON_ERROR_STOP=1 -At -f "$check" 2>&1)"; then
+    echo "::error file=$check::The check could not run (connection or SQL error): $output"
+    failed=1
+    continue
+  fi
+  result="$(echo "$output" | tail -n 1)"
   if [[ "$result" == "t" ]]; then
     echo "OK: $name is applied."
   else
