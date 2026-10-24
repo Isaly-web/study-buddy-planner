@@ -67,3 +67,9 @@
 ## Screenshots
 
 <!-- UI changes: before / after, desktop and mobile. Remove this section if there is no UI change. -->
+
+## After merge
+
+<!-- Don't tick these now. Copy the checklist from docs/post-merge-checklist.md into a comment on this PR once it is merged. -->
+
+- [ ] Post-merge checklist completed: `docs/post-merge-checklist.md`
