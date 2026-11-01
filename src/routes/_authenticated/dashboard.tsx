@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -79,6 +80,7 @@ function Dashboard() {
     <div className="min-h-screen bg-background">
       <AppHeader />
       <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+        <InstallAppPrompt />
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Hej!</h1>
           <p className="mt-1 text-muted-foreground">Här är din studieöversikt för idag.</p>

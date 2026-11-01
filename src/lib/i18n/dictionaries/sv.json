@@ -89,5 +89,11 @@
   "vocabulary_import_add_row": "Lägg till rad",
   "vocabulary_import_save_button": "Spara glosor",
   "vocabulary_import_saved_toast_suffix": "ord sparade",
-  "vocabulary_import_generic_error": "Något gick fel. Försök igen."
+  "vocabulary_import_generic_error": "Något gick fel. Försök igen.",
+  "install_app.title": "Installera Studieplan på mobilen",
+  "install_app.description": "Lägg till appen på hemskärmen för snabb åtkomst.",
+  "install_app.install_button": "Installera appen",
+  "install_app.dismiss": "Stäng",
+  "install_app.ios_steps": "Tryck på Dela i Safari och välj ”Lägg till på hemskärmen”.",
+  "install_app.android_steps": "Öppna webbläsarens meny och välj ”Installera app” eller ”Lägg till på startskärmen”."
 }
