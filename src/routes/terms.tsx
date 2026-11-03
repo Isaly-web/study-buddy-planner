@@ -95,7 +95,7 @@ function TermsPage() {
   return (
     <LegalPage
       title="Användarvillkor"
-      lastUpdated={<Todo>DATUM FÖR FASTSTÄLLD VERSION</Todo>}
+      lastUpdated="2026-11-03"
       intro={<p>Genom att använda {APP_NAME} godkänner du de här villkoren.</p>}
       sections={sections}
     />

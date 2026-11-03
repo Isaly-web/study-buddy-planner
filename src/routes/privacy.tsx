@@ -27,8 +27,8 @@ const sections: LegalSection[] = [
           426&nbsp;69 Västra Frölunda.
         </p>
         <p>
-          Kontakt i integritetsfrågor: <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>{" "}
-          <Todo>BEKRÄFTA KONTAKTADRESS FÖR INTEGRITETSFRÅGOR</Todo>
+          Kontakt i integritetsfrågor: <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a> eller per post
+          till Isaly AB, Grimmeredsvägen 45, 426&nbsp;69 Västra Frölunda.
         </p>
       </>
     ),
@@ -148,7 +148,7 @@ function PrivacyPage() {
   return (
     <LegalPage
       title="Integritetspolicy"
-      lastUpdated={<Todo>DATUM FÖR FASTSTÄLLD VERSION</Todo>}
+      lastUpdated="2026-11-03"
       intro={<p>Den här policyn beskriver hur {APP_NAME} behandlar personuppgifter.</p>}
       sections={sections}
     />
