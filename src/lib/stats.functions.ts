@@ -66,7 +66,12 @@ export type StatsPayload = {
     avg_score: number | null;
     pass_rate: number | null; // andel >= 60
   };
-  perLevel: { level: "E" | "C" | "A"; attempts: number; avg_score: number | null; pass_rate: number | null }[];
+  perLevel: {
+    level: "E" | "C" | "A";
+    attempts: number;
+    avg_score: number | null;
+    pass_rate: number | null;
+  }[];
   perSubject: {
     subject: string;
     total_tasks: number;
@@ -84,7 +89,13 @@ export type StatsPayload = {
     avg_score: number | null;
   }[];
   weekly: { week: string; avg_score: number | null; attempts: number; done_tasks: number }[];
-  repetition: { subject: string; topic: string | null; label: string; reason: string; avg_score: number | null }[];
+  repetition: {
+    subject: string;
+    topic: string | null;
+    label: string;
+    reason: string;
+    avg_score: number | null;
+  }[];
 };
 
 function isoWeekKey(d: Date): string {
@@ -107,9 +118,7 @@ export const getStats = createServerFn({ method: "GET" })
   .handler(async ({ context }): Promise<StatsPayload> => {
     const [examsRes, tasksRes, topicsRes, attemptsRes] = await Promise.all([
       context.supabase.from("exams").select("id, subject"),
-      context.supabase
-        .from("tasks")
-        .select("id, goal_id, topic_id, completed_at, day_date"),
+      context.supabase.from("tasks").select("id, goal_id, topic_id, completed_at, day_date"),
       context.supabase.from("topics").select("id, goal_id, title"),
       context.supabase
         .from("exercise_attempts")
@@ -153,7 +162,10 @@ export const getStats = createServerFn({ method: "GET" })
         level,
         attempts: rows.length,
         avg_score: avg(s),
-        pass_rate: rows.length === 0 ? null : Math.round((rows.filter((r) => r.score >= 60).length / rows.length) * 100),
+        pass_rate:
+          rows.length === 0
+            ? null
+            : Math.round((rows.filter((r) => r.score >= 60).length / rows.length) * 100),
       };
     });
 
@@ -171,7 +183,7 @@ export const getStats = createServerFn({ method: "GET" })
     }
     for (const at of attempts) {
       const examId = examByTask.get(at.task_id);
-      const subj = examId ? subjectByExam.get(examId) ?? "Övrigt" : "Övrigt";
+      const subj = examId ? (subjectByExam.get(examId) ?? "Övrigt") : "Övrigt";
       const a = subjectAgg.get(subj) ?? { total_tasks: 0, done_tasks: 0, scores: [], attempts: 0 };
       a.scores.push(at.score);
       a.attempts += 1;
@@ -190,7 +202,15 @@ export const getStats = createServerFn({ method: "GET" })
     // Per topic
     const topicAgg = new Map<
       string,
-      { exam_id: string; subject: string; topic: string; total_tasks: number; done_tasks: number; scores: number[]; attempts: number }
+      {
+        exam_id: string;
+        subject: string;
+        topic: string;
+        total_tasks: number;
+        done_tasks: number;
+        scores: number[];
+        attempts: number;
+      }
     >();
     for (const t of tasks) {
       if (!t.topic_id) continue;

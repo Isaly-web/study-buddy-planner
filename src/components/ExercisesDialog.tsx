@@ -277,8 +277,17 @@ function ExerciseItem({
             <span>{(coach.data as any)?.encouragement}</span>
           </p>
           <div className="mt-3 flex gap-2">
-            <Button size="sm" variant="outline" onClick={() => variant.mutate(false)} disabled={variant.isPending}>
-              {variant.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => variant.mutate(false)}
+              disabled={variant.isPending}
+            >
+              {variant.isPending ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Sparkles className="h-3.5 w-3.5" />
+              )}
               Ny liknande fråga
             </Button>
           </div>
@@ -318,7 +327,9 @@ function ExerciseItem({
             ) : null}
           </div>
           {coach.error ? (
-            <p className="mt-2 text-xs text-destructive">Kunde inte hjälpa till just nu. Försök igen.</p>
+            <p className="mt-2 text-xs text-destructive">
+              Kunde inte hjälpa till just nu. Försök igen.
+            </p>
           ) : null}
 
           {hintsGiven.map((h, i) => (

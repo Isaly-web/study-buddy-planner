@@ -15,7 +15,10 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Logga in – Studieplan" },
-      { name: "description", content: "Logga in eller skapa konto för att börja planera dina prov." },
+      {
+        name: "description",
+        content: "Logga in eller skapa konto för att börja planera dina prov.",
+      },
     ],
   }),
   component: AuthPage,
@@ -92,16 +95,28 @@ function AuthPage() {
             )}
             <div className="space-y-1.5">
               <Label htmlFor="email">{t("email")}</Label>
-              <Input id="email" type="email" required value={email}
-                onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+              <Input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="password">{t("password")}</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? "text" : "password"} required minLength={6}
-                  value={password} onChange={(e) => setPassword(e.target.value)}
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  minLength={6}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   autoComplete={mode === "signin" ? "current-password" : "new-password"}
-                  className="pr-10" />
+                  className="pr-10"
+                />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
@@ -120,8 +135,11 @@ function AuthPage() {
 
           <div className="mt-4 text-center text-sm text-muted-foreground">
             {mode === "signin" ? t("new_here") : t("already_have_account")}{" "}
-            <button type="button" className="font-medium text-primary hover:underline"
-              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>
+            <button
+              type="button"
+              className="font-medium text-primary hover:underline"
+              onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+            >
               {mode === "signin" ? t("register") : t("login")}
             </button>
           </div>

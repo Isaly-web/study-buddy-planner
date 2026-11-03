@@ -27,10 +27,18 @@ function NewExam() {
   const [description, setDescription] = useState("");
 
   const create = useMutation({
-    mutationFn: (v: { subject: string; grade?: string | null; exam_date: string; description: string }) =>
-      createFn({ data: v }),
+    mutationFn: (v: {
+      subject: string;
+      grade?: string | null;
+      exam_date: string;
+      description: string;
+    }) => createFn({ data: v }),
     onSuccess: (res) => {
-      analytics.track("plan_created", { exam_id: res.id, subject: subject.trim(), grade: grade.trim() || null });
+      analytics.track("plan_created", {
+        exam_id: res.id,
+        subject: subject.trim(),
+        grade: grade.trim() || null,
+      });
       toast.success("Studieplan skapad!");
       navigate({ to: "/exam/$examId", params: { examId: res.id } });
     },
@@ -66,32 +74,62 @@ function NewExam() {
           <form onSubmit={submit} className="space-y-5">
             <div className="space-y-1.5">
               <Label htmlFor="subject">Ämne</Label>
-              <Input id="subject" required placeholder="t.ex. Historia"
-                value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={100} />
+              <Input
+                id="subject"
+                required
+                placeholder="t.ex. Historia"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+                maxLength={100}
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
                 <Label htmlFor="grade">Årskurs (valfritt)</Label>
-                <Input id="grade" placeholder="t.ex. åk 8"
-                  value={grade} onChange={(e) => setGrade(e.target.value)} maxLength={20} />
+                <Input
+                  id="grade"
+                  placeholder="t.ex. åk 8"
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  maxLength={20}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="date">Provdatum</Label>
-                <Input id="date" type="date" required min={minDate}
-                  value={examDate} onChange={(e) => setExamDate(e.target.value)} />
+                <Input
+                  id="date"
+                  type="date"
+                  required
+                  min={minDate}
+                  value={examDate}
+                  onChange={(e) => setExamDate(e.target.value)}
+                />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="desc">Vad handlar provet om?</Label>
-              <Textarea id="desc" required rows={5}
+              <Textarea
+                id="desc"
+                required
+                rows={5}
                 placeholder="Skriv kapitel, områden eller vad läraren sagt. Ju mer du skriver, desto bättre plan."
-                value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} />
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={2000}
+              />
             </div>
 
             <Button type="submit" size="lg" className="w-full" disabled={create.isPending}>
-              {create.isPending ? "Skapar plan…" : (<><Sparkles className="h-4 w-4" />Skapa studieplan</>)}
+              {create.isPending ? (
+                "Skapar plan…"
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Skapa studieplan
+                </>
+              )}
             </Button>
           </form>
         </Card>
