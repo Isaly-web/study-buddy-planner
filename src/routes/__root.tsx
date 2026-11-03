@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { analytics } from "../lib/analytics-sdk";
 import { supabase } from "@/integrations/supabase/client";
+import { resetAppAccountBootstrap } from "@/lib/ensure-app-account";
 import "@fontsource/figtree/400.css";
 import "@fontsource/figtree/500.css";
 import "@fontsource/figtree/600.css";
@@ -155,6 +156,8 @@ function RootComponent() {
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_OUT") {
+        // Forget that the profile was ensured, so the next sign-in runs ensure_app_account() again.
+        resetAppAccountBootstrap();
         analytics.reset();
         setSignedIn(false);
       } else if (session?.user?.id) {
