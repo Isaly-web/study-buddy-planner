@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { BookOpenCheck, Eye, EyeOff } from "lucide-react";
 import { analytics } from "@/lib/analytics-sdk";
 import { useTranslation } from "@/lib/i18n";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SUPPORT_MAILTO } from "@/lib/app-config";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -144,6 +145,22 @@ function AuthPage() {
             </button>
           </div>
         </Card>
+
+        <p className="mt-6 text-center text-xs text-muted-foreground">
+          {t("auth_terms_prefix")}{" "}
+          <Link to="/terms" className="underline">
+            {t("auth_terms_terms")}
+          </Link>{" "}
+          {t("auth_terms_and")}{" "}
+          <Link to="/privacy" className="underline">
+            {t("auth_terms_privacy")}
+          </Link>
+          . {t("auth_terms_help")}{" "}
+          <a href={SUPPORT_MAILTO} className="underline">
+            {t("auth_terms_support")}
+          </a>
+          .
+        </p>
       </div>
     </div>
   );

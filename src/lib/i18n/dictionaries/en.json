@@ -95,5 +95,15 @@
   "install_app.install_button": "Install app",
   "install_app.dismiss": "Dismiss",
   "install_app.ios_steps": "Tap Share in Safari and choose “Add to Home Screen”.",
-  "install_app.android_steps": "Open the browser menu and choose “Install app” or “Add to Home screen”."
+  "install_app.android_steps": "Open the browser menu and choose “Install app” or “Add to Home screen”.",
+  "footer_legal": "Legal and support",
+  "footer_privacy": "Privacy",
+  "footer_terms": "Terms",
+  "footer_support": "Support",
+  "auth_terms_prefix": "By continuing you agree to our",
+  "auth_terms_terms": "terms",
+  "auth_terms_and": "and",
+  "auth_terms_privacy": "privacy policy",
+  "auth_terms_help": "Need help?",
+  "auth_terms_support": "Contact support"
 }

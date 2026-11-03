@@ -95,5 +95,15 @@
   "install_app.install_button": "Installera appen",
   "install_app.dismiss": "Stäng",
   "install_app.ios_steps": "Tryck på Dela i Safari och välj ”Lägg till på hemskärmen”.",
-  "install_app.android_steps": "Öppna webbläsarens meny och välj ”Installera app” eller ”Lägg till på startskärmen”."
+  "install_app.android_steps": "Öppna webbläsarens meny och välj ”Installera app” eller ”Lägg till på startskärmen”.",
+  "footer_legal": "Juridik och support",
+  "footer_privacy": "Integritet",
+  "footer_terms": "Villkor",
+  "footer_support": "Support",
+  "auth_terms_prefix": "Genom att fortsätta godkänner du våra",
+  "auth_terms_terms": "villkor",
+  "auth_terms_and": "och",
+  "auth_terms_privacy": "integritetspolicy",
+  "auth_terms_help": "Behöver du hjälp?",
+  "auth_terms_support": "Kontakta support"
 }

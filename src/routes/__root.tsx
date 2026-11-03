@@ -19,6 +19,7 @@ import "@fontsource/figtree/500.css";
 import "@fontsource/figtree/600.css";
 import "@fontsource/figtree/700.css";
 import { Toaster } from "@/components/ui/sonner";
+import { SiteFooter } from "@/components/SiteFooter";
 import { LanguageProvider } from "@/lib/i18n";
 import { FeedbackButton } from "@/components/FeedbackButton";
 
@@ -173,6 +174,7 @@ function RootComponent() {
       <LanguageProvider>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
+        <SiteFooter />
         {signedIn ? <FeedbackButton /> : null}
         <Toaster richColors position="top-center" />
       </LanguageProvider>
