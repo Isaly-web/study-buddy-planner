@@ -23,8 +23,8 @@ const sections: LegalSection[] = [
     body: (
       <>
         <p>
-          Personuppgiftsansvarig är <Todo>ISALY LEGAL ENTITY</Todo>, organisationsnummer{" "}
-          <Todo>ORGANISATIONSNUMMER</Todo>, <Todo>POSTADRESS</Todo>.
+          Personuppgiftsansvarig är Isaly AB, organisationsnummer 559472-5763, Grimmeredsvägen 45,
+          426&nbsp;69 Västra Frölunda.
         </p>
         <p>
           Kontakt i integritetsfrågor: <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>{" "}
