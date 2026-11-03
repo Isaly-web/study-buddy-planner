@@ -21,10 +21,7 @@ const sections: LegalSection[] = [
     heading: "Om tjänsten",
     body: (
       <>
-        <p>
-          {APP_NAME} tillhandahålls av <Todo>ISALY LEGAL ENTITY</Todo>, organisationsnummer{" "}
-          <Todo>ORGANISATIONSNUMMER</Todo>.
-        </p>
+        <p>{APP_NAME} tillhandahålls av Isaly AB, organisationsnummer 559472-5763.</p>
         <p>
           Tjänsten hjälper dig att planera inför prov: studieplaner dag för dag, övningar, glosor
           och uppläst ljud, som du också kan dela med en länk.
