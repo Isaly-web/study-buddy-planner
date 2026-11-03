@@ -115,8 +115,8 @@ const sections: LegalSection[] = [
     body: (
       <p>
         Du har rätt till tillgång, rättelse och, i den mån lagen tillåter, radering, begränsning och
-        dataportabilitet. Kontakta <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>.{" "}
-        <Todo>SVARSTID, max en månad enligt GDPR</Todo>.
+        dataportabilitet. Kontakta <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a>. Vi svarar utan
+        onödigt dröjsmål och senast inom en månad.
       </p>
     ),
   },
