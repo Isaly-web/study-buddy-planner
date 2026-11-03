@@ -4,7 +4,7 @@
 
 export const APP_NAME = "Studieplan";
 
-// TODO: confirm support address with Isaly before relying on it in production.
+// Support address confirmed by Isaly on 2026-11-03.
 export const SUPPORT_EMAIL = "support@isaly.se";
 
 export const SUPPORT_MAILTO = `mailto:${SUPPORT_EMAIL}`;
