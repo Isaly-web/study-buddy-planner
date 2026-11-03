@@ -66,7 +66,8 @@ const sections: LegalSection[] = [
     heading: "Pris och betalning",
     body: (
       <p>
-        <Todo>PRISMODELL OCH BETALVILLKOR (om tjänsten blir avgiftsbelagd)</Todo>
+        Tjänsten är kostnadsfri under betaperioden.{" "}
+        <Todo>PRISMODELL OCH BETALVILLKOR EFTER BETAPERIODEN</Todo>
       </p>
     ),
   },
