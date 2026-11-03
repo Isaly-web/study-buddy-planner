@@ -42,8 +42,8 @@ function Landing() {
           Vet exakt vad du ska plugga – varje dag.
         </h1>
         <p className="mt-4 text-lg text-muted-foreground">
-          Berätta vad provet handlar om. Vi delar upp innehållet i tydliga områden och
-          fördelar uppgifter dag-för-dag fram till provdagen.
+          Berätta vad provet handlar om. Vi delar upp innehållet i tydliga områden och fördelar
+          uppgifter dag-för-dag fram till provdagen.
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link to="/auth">
@@ -53,9 +53,21 @@ function Landing() {
 
         <div className="mt-16 grid gap-4 text-left sm:grid-cols-3">
           {[
-            { icon: Sparkles, title: "Skapa plan på 30 sek", body: "Ämne, datum, beskrivning – klart." },
-            { icon: CalendarCheck, title: "Dag-för-dag", body: "Du ser tydligt vad du ska göra idag." },
-            { icon: BookOpenCheck, title: "Dela med förälder", body: "En länk – ingen inloggning krävs." },
+            {
+              icon: Sparkles,
+              title: "Skapa plan på 30 sek",
+              body: "Ämne, datum, beskrivning – klart.",
+            },
+            {
+              icon: CalendarCheck,
+              title: "Dag-för-dag",
+              body: "Du ser tydligt vad du ska göra idag.",
+            },
+            {
+              icon: BookOpenCheck,
+              title: "Dela med förälder",
+              body: "En länk – ingen inloggning krävs.",
+            },
           ].map((f) => (
             <div key={f.title} className="rounded-2xl border bg-card p-5">
               <f.icon className="h-5 w-5 text-primary" />

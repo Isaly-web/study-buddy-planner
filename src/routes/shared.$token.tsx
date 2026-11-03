@@ -9,10 +9,7 @@ import { track } from "@/lib/analytics";
 
 export const Route = createFileRoute("/shared/$token")({
   head: () => ({
-    meta: [
-      { title: "Studieplan – delad vy" },
-      { name: "robots", content: "noindex" },
-    ],
+    meta: [{ title: "Studieplan – delad vy" }, { name: "robots", content: "noindex" }],
   }),
   component: SharedPage,
 });
@@ -43,7 +40,9 @@ function SharedPage() {
         {isLoading ? (
           <p className="text-muted-foreground">Laddar…</p>
         ) : error ? (
-          <p className="text-destructive">Kunde inte ladda den delade studieplanen. Försök igen senare.</p>
+          <p className="text-destructive">
+            Kunde inte ladda den delade studieplanen. Försök igen senare.
+          </p>
         ) : data ? (
           <ExamView bundle={data} />
         ) : null}

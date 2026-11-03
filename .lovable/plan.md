@@ -4,20 +4,21 @@ Instrumentera nyckelevents enligt Steg 5 och flytta `page_view` till TanStack Ro
 
 ## Events som läggs till / justeras
 
-| Event | Var | Trigger |
-|---|---|---|
-| `page_view` | `src/router.tsx` (+ ta bort useEffect i `__root.tsx`) | `router.subscribe("onResolved", …)` — dedupa per path (behåll befintlig logik) |
-| `signup_started` | `src/routes/auth.tsx` | När formuläret submittas i `mode === "signup"` (före supabase-call) |
-| `signup_completed` | redan klart (`trackOnce`) | — |
-| `plan_created` | `src/routes/_authenticated/exam.new.tsx` | I `onSuccess` bredvid befintligt `exam_created` (behåll `exam_created` för bakåtkomp.) |
-| `study_session_started` | `src/components/ExamView.tsx` | När `ExercisesDialog` öppnas för en task (setExercise(...)-callsite) |
-| `task_completed` | redan klart | — |
+| Event                   | Var                                                   | Trigger                                                                                |
+| ----------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `page_view`             | `src/router.tsx` (+ ta bort useEffect i `__root.tsx`) | `router.subscribe("onResolved", …)` — dedupa per path (behåll befintlig logik)         |
+| `signup_started`        | `src/routes/auth.tsx`                                 | När formuläret submittas i `mode === "signup"` (före supabase-call)                    |
+| `signup_completed`      | redan klart (`trackOnce`)                             | —                                                                                      |
+| `plan_created`          | `src/routes/_authenticated/exam.new.tsx`              | I `onSuccess` bredvid befintligt `exam_created` (behåll `exam_created` för bakåtkomp.) |
+| `study_session_started` | `src/components/ExamView.tsx`                         | När `ExercisesDialog` öppnas för en task (setExercise(...)-callsite)                   |
+| `task_completed`        | redan klart                                           | —                                                                                      |
 
 ## Teknisk detalj
 
 **`page_view` via router:**
 
 `src/lib/analytics.ts` exporterar redan `trackPageView(path)` med in-memory dedupe. Vi:
+
 1. Tar bort `useEffect(trackPageView)` i `src/routes/__root.tsx` (och `useLocation`-importen om oanvänd).
 2. I `src/router.tsx`, efter `createRouter(...)`:
    ```ts

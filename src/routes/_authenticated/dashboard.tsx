@@ -97,28 +97,43 @@ function Dashboard() {
                 <p className="mt-2 text-sm text-muted-foreground">
                   Kunde inte ladda dagens uppgifter.
                 </p>
-                <Button variant="outline" size="sm" className="mt-3" onClick={() => today.refetch()}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-3"
+                  onClick={() => today.refetch()}
+                >
                   Försök igen
                 </Button>
               </div>
             ) : (today.data ?? []).length === 0 ? (
               <p className="text-sm text-muted-foreground">
-                Inget att göra idag. {exams.data?.length ? "Bra jobbat – ta en paus 🌿" : "Lägg till något att plugga för att komma igång."}
+                Inget att göra idag.{" "}
+                {exams.data?.length
+                  ? "Bra jobbat – ta en paus 🌿"
+                  : "Lägg till något att plugga för att komma igång."}
               </p>
             ) : (
               <ul className="space-y-2">
                 {today.data!.map((t) => (
-                  <li key={t.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-muted/50">
+                  <li
+                    key={t.id}
+                    className="flex items-start gap-3 rounded-lg p-2 hover:bg-muted/50"
+                  >
                     <Checkbox
                       className="mt-0.5 h-5 w-5"
                       checked={!!t.completed_at}
                       onCheckedChange={(v) => toggle.mutate({ task_id: t.id, done: v === true })}
                     />
                     <div className="flex-1">
-                      <p className={`font-medium ${t.completed_at ? "text-muted-foreground line-through" : ""}`}>
+                      <p
+                        className={`font-medium ${t.completed_at ? "text-muted-foreground line-through" : ""}`}
+                      >
                         {t.title}
                       </p>
-                      <p className="text-xs text-muted-foreground">{t.subject} · {t.estimated_minutes} min</p>
+                      <p className="text-xs text-muted-foreground">
+                        {t.subject} · {t.estimated_minutes} min
+                      </p>
                     </div>
                     {supportsExerciseTutor(t.goal_type) ? (
                       <Button
@@ -154,9 +169,7 @@ function Dashboard() {
           ) : vocab.isError || standaloneDecks.isError ? (
             <Card className="p-5 text-center">
               <AlertCircle className="mx-auto h-6 w-6 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">
-                Kunde inte ladda ordförrådet.
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground">Kunde inte ladda ordförrådet.</p>
               <Button
                 variant="outline"
                 size="sm"
@@ -271,7 +284,8 @@ function Dashboard() {
           ) : (
             <div className="grid gap-3 sm:grid-cols-2">
               {exams.data.map((e) => {
-                const pct = e.total_tasks > 0 ? Math.round((e.done_tasks / e.total_tasks) * 100) : 0;
+                const pct =
+                  e.total_tasks > 0 ? Math.round((e.done_tasks / e.total_tasks) * 100) : 0;
                 const dleft = daysUntil(e.exam_date);
                 const isAssignment = e.goal_type === "assignment";
                 return (

@@ -79,18 +79,14 @@ function StatsPage() {
                     <div key={l.level} className="rounded-lg border bg-muted/30 p-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-semibold">Nivå {l.level}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {l.attempts} övningar
-                        </span>
+                        <span className="text-xs text-muted-foreground">{l.attempts} övningar</span>
                       </div>
                       <p className="mt-1 text-2xl font-bold">
                         {l.avg_score === null ? "–" : `${l.avg_score}`}
                         <span className="text-sm font-normal text-muted-foreground">/100</span>
                       </p>
                       {l.pass_rate !== null && (
-                        <p className="text-xs text-muted-foreground">
-                          {l.pass_rate}% godkända
-                        </p>
+                        <p className="text-xs text-muted-foreground">{l.pass_rate}% godkända</p>
                       )}
                     </div>
                   ))}
@@ -132,8 +128,7 @@ function StatsPage() {
                           <div className="flex items-center justify-between">
                             <span className="font-medium">{s.subject}</span>
                             <span className="text-xs text-muted-foreground">
-                              {s.done_tasks}/{s.total_tasks} uppgifter ·{" "}
-                              {s.attempts} övningar ·{" "}
+                              {s.done_tasks}/{s.total_tasks} uppgifter · {s.attempts} övningar ·{" "}
                               {s.avg_score === null ? "–" : `${s.avg_score}/100`}
                             </span>
                           </div>

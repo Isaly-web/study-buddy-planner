@@ -75,7 +75,9 @@ export function LessonPanel({
       ) : data ? (
         <div>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-semibold">{data.title ?? (mode === "examples" ? "Exempel" : "Genomgång")}</p>
+            <p className="text-sm font-semibold">
+              {data.title ?? (mode === "examples" ? "Exempel" : "Genomgång")}
+            </p>
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={() => setMode(null)}>
                 Byt läge

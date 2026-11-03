@@ -20,10 +20,14 @@ export function PodcastPlayer({ text, intro }: { text: string; intro?: string })
   const stop = () => {
     try {
       abortRef.current?.abort();
-    } catch {}
+    } catch {
+      // Already aborted or closed; stopping twice is harmless.
+    }
     try {
       ctxRef.current?.close();
-    } catch {}
+    } catch {
+      // Already aborted or closed; stopping twice is harmless.
+    }
     ctxRef.current = null;
     abortRef.current = null;
     playheadRef.current = 0;
@@ -132,7 +136,13 @@ export function PodcastPlayer({ text, intro }: { text: string; intro?: string })
           ) : (
             <Play className="h-4 w-4" />
           )}
-          {state === "playing" ? "Paus" : state === "paused" ? "Fortsätt" : state === "done" ? "Spela igen" : "Spela"}
+          {state === "playing"
+            ? "Paus"
+            : state === "paused"
+              ? "Fortsätt"
+              : state === "done"
+                ? "Spela igen"
+                : "Spela"}
         </Button>
         <span className="text-xs text-muted-foreground">
           {state === "loading"

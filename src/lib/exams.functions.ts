@@ -116,7 +116,12 @@ export function distributeTasks(plan: PlanResult, days: string[]) {
   const studyDays = days.length >= 3 ? days.slice(0, -1) : days;
   const flat: { topicIndex: number; task: PlanTopic["tasks"][number] }[] = [];
   plan.topics.forEach((t, i) => t.tasks.forEach((task) => flat.push({ topicIndex: i, task })));
-  const distribution: { day: string; topicIndex: number; task: PlanTopic["tasks"][number]; order: number }[] = [];
+  const distribution: {
+    day: string;
+    topicIndex: number;
+    task: PlanTopic["tasks"][number];
+    order: number;
+  }[] = [];
   flat.forEach((item, idx) => {
     const day = studyDays[idx % studyDays.length] ?? studyDays[studyDays.length - 1];
     distribution.push({ day, topicIndex: item.topicIndex, task: item.task, order: idx });
@@ -204,9 +209,7 @@ export const createExam = createServerFn({ method: "POST" })
 
     const { data: topicRows, error: topicErr } = await context.supabase
       .from("topics")
-      .insert(
-        plan.topics.map((t, i) => ({ goal_id: examRow.id, title: t.title, order: i })),
-      )
+      .insert(plan.topics.map((t, i) => ({ goal_id: examRow.id, title: t.title, order: i })))
       .select("id, order");
     if (topicErr || !topicRows) throw new Error(topicErr?.message ?? "Kunde inte spara områden.");
 
@@ -268,7 +271,7 @@ export const listExams = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
 
     const ids = (exams ?? []).map((e) => e.id);
-    let counts: Record<string, { total: number; done: number }> = {};
+    const counts: Record<string, { total: number; done: number }> = {};
     if (ids.length) {
       const { data: tasks, error: tErr } = await context.supabase
         .from("tasks")
@@ -411,13 +414,13 @@ export const deleteExam = createServerFn({ method: "POST" })
 
 export const generateExercises = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) =>
-    z.object({ task_id: z.string().uuid() }).parse(input),
-  )
+  .inputValidator((input: unknown) => z.object({ task_id: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, estimated_minutes, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select(
+        "id, title, estimated_minutes, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)",
+      )
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error(tErr?.message ?? "Uppgiften hittades inte.");
@@ -578,12 +581,16 @@ export const coachAnswer = createServerFn({ method: "POST" })
       `Övning (nivå ${data.level}). Kriterier: ${data.criteria}.`,
       `Fråga: "${data.prompt}".`,
       `Elevens svar: "${data.answer}".`,
-      data.previous_hints?.length ? `Tidigare ledtrådar: ${data.previous_hints.map((h, i) => `(${i + 1}) ${h}`).join(" ")}. Upprepa dem inte.` : "",
+      data.previous_hints?.length
+        ? `Tidigare ledtrådar: ${data.previous_hints.map((h, i) => `(${i + 1}) ${h}`).join(" ")}. Upprepa dem inte.`
+        : "",
       `Om svaret redan är korrekt: sätt "is_correct" till true och skriv beröm i "encouragement"; låt "hint" vara en kort bekräftelse.`,
       `Annars: sätt "is_correct" till false. ${stage}`,
       `"encouragement" ska ALLTID vara en kort, uppriktig uppmuntran som lyfter något eleven har gjort bra (max 1 mening).`,
       `Svara på svenska med giltig JSON enligt schemat.`,
-    ].filter(Boolean).join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const { object } = await generateObject({
       model,
@@ -631,7 +638,9 @@ export const generateVariantQuestion = createServerFn({ method: "POST" })
       `Du är en svensk grundskolelärare${exam.grade ? ` i ${exam.grade}` : ""}.`,
       `Ämne: ${exam.subject}. Prov: ${exam.description}.`,
       `Skapa EN ny övning på nivå ${data.level} (kriterier: ${data.criteria}) som testar samma kunskap som frågan: "${data.previous_prompt}".`,
-      data.easier ? `Gör den lite enklare och mer konkret.` : `Formulera den annorlunda men på samma nivå.`,
+      data.easier
+        ? `Gör den lite enklare och mer konkret.`
+        : `Formulera den annorlunda men på samma nivå.`,
       `Ge också en kort valfri "hint".`,
       `Svara på svenska med giltig JSON enligt schemat.`,
     ].join(" ");
@@ -659,7 +668,9 @@ export const generateLesson = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { data: task, error: tErr } = await context.supabase
       .from("tasks")
-      .select("id, title, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)")
+      .select(
+        "id, title, topic_id, goal_id, exams!inner(subject, grade, description, user_id), topics(title)",
+      )
       .eq("id", data.task_id)
       .single();
     if (tErr || !task) throw new Error("Uppgiften hittades inte.");
@@ -698,7 +709,9 @@ export const generateLesson = createServerFn({ method: "POST" })
         levelStyle[data.level],
         `Ge 2-4 konkreta praktiska exempel på svenska. Varje exempel ska ha en kort titel och en förklarande brödtext (max ~80 ord). Använd gärna en enkel jämförelse eller vardagssituation.`,
         `Svara med giltig JSON enligt schemat.`,
-      ].filter(Boolean).join(" ");
+      ]
+        .filter(Boolean)
+        .join(" ");
       const { object } = await generateObject({
         model,
         schema,
@@ -724,7 +737,9 @@ export const generateLesson = createServerFn({ method: "POST" })
         ? `Skriv en liten "mikropodd" på ca 2-4 minuter (~300-450 ord) i naturligt talspråk. Undvik listor och rubriker – flytande tal. "markdown" är samma text, formaterad med korta stycken. "spoken_intro" är en kort hälsning på 1-2 meningar.`
         : `Skriv en kort sammanfattning (2-5 minuter läsning, ~250-450 ord) på svenska i markdown. Använd korta stycken, gärna 1-2 rubriker och en punktlista med de viktigaste begreppen. "spoken_intro" kan vara samma första mening.`,
       `Svara med giltig JSON enligt schemat.`,
-    ].filter(Boolean).join(" ");
+    ]
+      .filter(Boolean)
+      .join(" ");
 
     const { object } = await generateObject({
       model,
