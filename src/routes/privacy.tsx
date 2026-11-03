@@ -87,8 +87,8 @@ const sections: LegalSection[] = [
           (Stockholm).
         </li>
         <li>
-          Vercel (drift och leverans av webbappen).{" "}
-          <Todo>BEKRÄFTA REGION OCH ÖVERFÖRINGSMEKANISM</Todo>
+          Vercel (drift och leverans av webbappen). Serverfunktionerna körs i Stockholm.{" "}
+          <Todo>BEKRÄFTA ÖVERFÖRINGSMEKANISM FÖR VERCEL</Todo>
         </li>
         <li>
           Anthropic (Claude): det du anger och ditt underlag skickas dit för att skapa studieplaner,
@@ -96,6 +96,12 @@ const sections: LegalSection[] = [
         </li>
         <li>OpenAI: text skickas dit för att skapa uppläst ljud (lektionsuppläsning).</li>
         <li>Isaly Feedback Hub (mottagning av feedback du skickar).</li>
+        <li>
+          Överföring utanför EU/EES:{" "}
+          <Todo>
+            BESKRIV VAR AI-LEVERANTÖRERNA BEHANDLAR UPPGIFTERNA OCH VILKET SKYDD SOM GÄLLER
+          </Todo>
+        </li>
       </ul>
     ),
   },
