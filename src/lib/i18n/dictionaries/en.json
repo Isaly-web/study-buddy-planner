@@ -105,5 +105,7 @@
   "auth_terms_and": "and",
   "auth_terms_privacy": "privacy policy",
   "auth_terms_help": "Need help?",
+  "auth_age_confirm": "I am at least 13 years old",
+  "auth_age_required": "You must be at least 13 years old to create an account.",
   "auth_terms_support": "Contact support"
 }

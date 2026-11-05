@@ -71,8 +71,11 @@ const sections: LegalSection[] = [
           <Todo>RÄTTSLIG GRUND PER ÄNDAMÅL – BEKRÄFTA</Todo>
         </p>
         <p>
-          Tjänsten riktar sig till personer som pluggar, och användare kan vara under 18 år.{" "}
-          <Todo>ÅLDERSGRÄNS OCH SAMTYCKE FÖR MINDERÅRIGA – BEKRÄFTA</Todo>
+          Tjänsten riktar sig till personer som pluggar. Åldersgränsen är 13 år, vilket är den
+          svenska gränsen för barns eget samtycke till informationssamhällets tjänster. Vi skapar
+          inte konton åt personer under 13 år, och om vi får veta att ett konto tillhör någon under
+          13 år raderar vi det. Kontakta oss om du tror att ett barn under 13 år har skapat ett
+          konto.
         </p>
       </>
     ),
