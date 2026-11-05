@@ -62,6 +62,16 @@ const sections: LegalSection[] = [
     ),
   },
   {
+    id: "alder",
+    heading: "Ålderskrav",
+    body: (
+      <p>
+        Du måste vara minst 13 år för att skapa konto och använda {APP_NAME}. När du skapar konto
+        intygar du att du uppfyller kravet. Vi får radera konton som tillhör personer under 13 år.
+      </p>
+    ),
+  },
+  {
     id: "pris",
     heading: "Pris och betalning",
     body: (

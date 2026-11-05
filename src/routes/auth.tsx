@@ -34,9 +34,14 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [ageOk, setAgeOk] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (mode === "signup" && !ageOk) {
+      toast.error(t("auth_age_required"));
+      return;
+    }
     setLoading(true);
     try {
       if (mode === "signup") {
@@ -129,6 +134,18 @@ function AuthPage() {
                 </button>
               </div>
             </div>
+            {mode === "signup" && (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  required
+                  checked={ageOk}
+                  onChange={(e) => setAgeOk(e.target.checked)}
+                  className="mt-0.5 h-4 w-4"
+                />
+                <span>{t("auth_age_confirm")}</span>
+              </label>
+            )}
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? t("loading") + "…" : mode === "signin" ? t("login") : t("register")}
             </Button>

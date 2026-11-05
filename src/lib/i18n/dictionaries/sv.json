@@ -105,5 +105,7 @@
   "auth_terms_and": "och",
   "auth_terms_privacy": "integritetspolicy",
   "auth_terms_help": "Behöver du hjälp?",
+  "auth_age_confirm": "Jag är minst 13 år gammal",
+  "auth_age_required": "Du måste vara minst 13 år för att skapa konto.",
   "auth_terms_support": "Kontakta support"
 }
