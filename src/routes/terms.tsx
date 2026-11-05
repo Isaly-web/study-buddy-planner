@@ -39,8 +39,36 @@ const sections: LegalSection[] = [
           innehålla fel. Kontrollera mot din kursbok eller lärare. Du ansvarar för hur du använder
           innehållet.
         </p>
+      </>
+    ),
+  },
+  {
+    id: "beta-ansvar",
+    heading: "Betatjänst och ansvar",
+    body: (
+      <>
         <p>
-          <Todo>ANSVARSBEGRÄNSNING OCH GARANTIER – BEKRÄFTA MED JURIST</Todo>
+          {APP_NAME} är en betatjänst. Den tillhandahålls i befintligt skick och utan garantier för
+          att den är felfri, alltid tillgänglig eller lämpar sig för ett visst ändamål.
+        </p>
+        <p>
+          Isaly AB:s ansvar för skada är begränsat så långt lagen tillåter. Begränsningen gäller
+          aldrig skada som orsakats med uppsåt eller av grov vårdslöshet.
+        </p>
+        <p>
+          Om du är konsument gäller dina rättigheter enligt tvingande konsumentlagstiftning oavsett
+          vad som står i dessa villkor. Ingenting i villkoren inskränker dem.
+        </p>
+        <p>Särskilt för {APP_NAME}:</p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            AI-resultat: Resultat som skapas med hjälp av AI kan innehålla fel eller vara
+            ofullständiga och ska kontrolleras innan du förlitar dig på dem. Kontrollera
+            studieinnehåll mot din kursbok eller lärare.
+          </li>
+        </ul>
+        <p>
+          <Todo>JURIST SKA GRANSKA AVSNITTET BETATJÄNST OCH ANSVAR (INKL. KONSUMENTSKYDD)</Todo>
         </p>
       </>
     ),
@@ -96,7 +124,7 @@ function TermsPage() {
   return (
     <LegalPage
       title="Användarvillkor"
-      lastUpdated="2026-11-03"
+      lastUpdated="2026-11-05"
       intro={<p>Genom att använda {APP_NAME} godkänner du de här villkoren.</p>}
       sections={sections}
     />
