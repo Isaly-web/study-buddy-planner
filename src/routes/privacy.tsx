@@ -110,8 +110,11 @@ const sections: LegalSection[] = [
     heading: "Hur länge uppgifterna sparas",
     body: (
       <p>
-        Uppgifterna sparas så länge du har ett konto.{" "}
-        <Todo>BEKRÄFTA RETENTIONSTIDER (STUDIEPLANER, SVAR, LOGGAR, FEEDBACK)</Todo>
+        Uppgifterna sparas så länge du har ett konto. Skärmdumpar som bifogas feedback tas bort
+        automatiskt efter 12 månader.{" "}
+        <Todo>
+          JURIST: BEKRÄFTA 12 MÅNADER; RETENTIONSTIDER FÖR STUDIEPLANER, SVAR, LOGGAR OCH FEEDBACK
+        </Todo>
       </p>
     ),
   },
