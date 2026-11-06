@@ -135,11 +135,13 @@ const sections: LegalSection[] = [
         mål, ämnen, uppgifter, övningar, glosor, statistik och bifogade skärmdumpar. Det går direkt
         och kan inte ångras, och delade länkar slutar fungera. Ditt Isaly-konto delas med andra
         Isaly-appar, så en app får inte radera själva kontot; inloggningen finns kvar efter att du
-        raderat uppgifterna här. Kontakta <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a> om du vill ha
-        hjälp.{" "}
+        raderat uppgifterna här, tills du ber oss ta bort den i alla appar. Mejlar du{" "}
+        <a href={SUPPORT_MAILTO}>{SUPPORT_EMAIL}</a> i stället raderar vi appens uppgifter inom 30
+        dagar. Vill du att hela ditt Isaly-konto tas bort i alla appar, skriv det i mejlet; vi
+        raderar då kontot och uppgifterna i samtliga appar inom 30 dagar.{" "}
         <Todo>
-          JURIST: frist (30 dagar vid begäran via support), säkerhetskopior och hur det gemensamma
-          Isaly-kontot raderas
+          JURIST: bekräfta fristen, hur länge uppgifter får finnas kvar i säkerhetskopior, och hur
+          Feedback Hub (separat tjänst) hanteras
         </Todo>
       </p>
     ),
