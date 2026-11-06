@@ -105,7 +105,18 @@
   "auth_terms_and": "and",
   "auth_terms_privacy": "privacy policy",
   "auth_terms_help": "Need help?",
+  "auth_terms_support": "Contact support",
+  "account": "Account",
+  "account_email": "Email",
+  "account_delete_title": "Delete my data",
+  "account_delete_body": "Deletes all your data in Studieplan: goals, topics, tasks, exercises, vocabulary, statistics and attached screenshots. Shared links stop working. This cannot be undone. Your Isaly account is shared with other Isaly apps and is not deleted from here.",
+  "account_delete_button": "Delete my data",
+  "account_confirm_title": "Delete all your data?",
+  "account_confirm_body": "Everything you created in Studieplan is deleted immediately and cannot be restored. You will be signed out on this device.",
+  "account_confirm_button": "Delete everything",
+  "account_deleted": "Your data has been deleted",
+  "account_delete_failed": "Could not delete your data. Please try again.",
+  "account_privacy_link": "Read more in the privacy policy",
   "auth_age_confirm": "I am at least 13 years old",
-  "auth_age_required": "You must be at least 13 years old to create an account.",
-  "auth_terms_support": "Contact support"
+  "auth_age_required": "You must be at least 13 years old to create an account."
 }

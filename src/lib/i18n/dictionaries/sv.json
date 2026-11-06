@@ -105,7 +105,18 @@
   "auth_terms_and": "och",
   "auth_terms_privacy": "integritetspolicy",
   "auth_terms_help": "Behöver du hjälp?",
+  "auth_terms_support": "Kontakta support",
+  "account": "Konto",
+  "account_email": "E-post",
+  "account_delete_title": "Radera mina uppgifter",
+  "account_delete_body": "Raderar alla dina uppgifter i Studieplan: mål, ämnen, uppgifter, övningar, glosor, statistik och bifogade skärmdumpar. Delade länkar slutar fungera. Det går inte att ångra. Ditt Isaly-konto delas med andra Isaly-appar och raderas inte härifrån.",
+  "account_delete_button": "Radera mina uppgifter",
+  "account_confirm_title": "Radera alla dina uppgifter?",
+  "account_confirm_body": "Allt du skapat i Studieplan raderas direkt och kan inte återställas. Du loggas ut från den här enheten.",
+  "account_confirm_button": "Radera allt",
+  "account_deleted": "Dina uppgifter är raderade",
+  "account_delete_failed": "Kunde inte radera dina uppgifter. Försök igen.",
+  "account_privacy_link": "Läs mer i integritetspolicyn",
   "auth_age_confirm": "Jag är minst 13 år gammal",
-  "auth_age_required": "Du måste vara minst 13 år för att skapa konto.",
-  "auth_terms_support": "Kontakta support"
+  "auth_age_required": "Du måste vara minst 13 år för att skapa konto."
 }
