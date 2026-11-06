@@ -116,5 +116,7 @@
   "account_confirm_button": "Delete everything",
   "account_deleted": "Your data has been deleted",
   "account_delete_failed": "Could not delete your data. Please try again.",
-  "account_privacy_link": "Read more in the privacy policy"
+  "account_privacy_link": "Read more in the privacy policy",
+  "auth_age_confirm": "I am at least 13 years old",
+  "auth_age_required": "You must be at least 13 years old to create an account."
 }

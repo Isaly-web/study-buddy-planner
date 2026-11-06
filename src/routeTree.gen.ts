@@ -26,6 +26,7 @@ import { Route as AuthenticatedExamNewRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedFeedbackIndexRouteImport } from './routes/_authenticated/feedback.index'
 import { Route as AuthenticatedFeedbackIdRouteImport } from './routes/_authenticated/feedback.$id'
 import { Route as ApiPublicTrackRouteImport } from './routes/api/public/track'
+import { Route as ApiPublicHooksPurgeFeedbackScreenshotsRouteImport } from './routes/api/public/hooks/purge-feedback-screenshots'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,12 @@ const ApiPublicTrackRoute = ApiPublicTrackRouteImport.update({
   path: '/api/public/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksPurgeFeedbackScreenshotsRoute =
+  ApiPublicHooksPurgeFeedbackScreenshotsRouteImport.update({
+    id: '/api/public/hooks/purge-feedback-screenshots',
+    path: '/api/public/hooks/purge-feedback-screenshots',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/feedback/': typeof AuthenticatedFeedbackIndexRoute
+  '/api/public/hooks/purge-feedback-screenshots': typeof ApiPublicHooksPurgeFeedbackScreenshotsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -148,6 +156,7 @@ export interface FileRoutesByTo {
   '/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/feedback': typeof AuthenticatedFeedbackIndexRoute
+  '/api/public/hooks/purge-feedback-screenshots': typeof ApiPublicHooksPurgeFeedbackScreenshotsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -168,6 +177,7 @@ export interface FileRoutesById {
   '/_authenticated/feedback/$id': typeof AuthenticatedFeedbackIdRoute
   '/api/public/track': typeof ApiPublicTrackRoute
   '/_authenticated/feedback/': typeof AuthenticatedFeedbackIndexRoute
+  '/api/public/hooks/purge-feedback-screenshots': typeof ApiPublicHooksPurgeFeedbackScreenshotsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/feedback/$id'
     | '/api/public/track'
     | '/feedback/'
+    | '/api/public/hooks/purge-feedback-screenshots'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/feedback/$id'
     | '/api/public/track'
     | '/feedback'
+    | '/api/public/hooks/purge-feedback-screenshots'
   id:
     | '__root__'
     | '/'
@@ -225,6 +237,7 @@ export interface FileRouteTypes {
     | '/_authenticated/feedback/$id'
     | '/api/public/track'
     | '/_authenticated/feedback/'
+    | '/api/public/hooks/purge-feedback-screenshots'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -236,6 +249,7 @@ export interface RootRouteChildren {
   ApiLessonAudioRoute: typeof ApiLessonAudioRoute
   SharedTokenRoute: typeof SharedTokenRoute
   ApiPublicTrackRoute: typeof ApiPublicTrackRoute
+  ApiPublicHooksPurgeFeedbackScreenshotsRoute: typeof ApiPublicHooksPurgeFeedbackScreenshotsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -359,6 +373,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/purge-feedback-screenshots': {
+      id: '/api/public/hooks/purge-feedback-screenshots'
+      path: '/api/public/hooks/purge-feedback-screenshots'
+      fullPath: '/api/public/hooks/purge-feedback-screenshots'
+      preLoaderRoute: typeof ApiPublicHooksPurgeFeedbackScreenshotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -398,6 +419,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLessonAudioRoute: ApiLessonAudioRoute,
   SharedTokenRoute: SharedTokenRoute,
   ApiPublicTrackRoute: ApiPublicTrackRoute,
+  ApiPublicHooksPurgeFeedbackScreenshotsRoute:
+    ApiPublicHooksPurgeFeedbackScreenshotsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

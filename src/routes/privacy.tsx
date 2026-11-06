@@ -71,8 +71,11 @@ const sections: LegalSection[] = [
           <Todo>RÄTTSLIG GRUND PER ÄNDAMÅL – BEKRÄFTA</Todo>
         </p>
         <p>
-          Tjänsten riktar sig till personer som pluggar, och användare kan vara under 18 år.{" "}
-          <Todo>ÅLDERSGRÄNS OCH SAMTYCKE FÖR MINDERÅRIGA – BEKRÄFTA</Todo>
+          Tjänsten riktar sig till personer som pluggar. Åldersgränsen är 13 år, vilket är den
+          svenska gränsen för barns eget samtycke till informationssamhällets tjänster. Vi skapar
+          inte konton åt personer under 13 år, och om vi får veta att ett konto tillhör någon under
+          13 år raderar vi det. Kontakta oss om du tror att ett barn under 13 år har skapat ett
+          konto.
         </p>
       </>
     ),
@@ -110,8 +113,11 @@ const sections: LegalSection[] = [
     heading: "Hur länge uppgifterna sparas",
     body: (
       <p>
-        Uppgifterna sparas så länge du har ett konto.{" "}
-        <Todo>BEKRÄFTA RETENTIONSTIDER (STUDIEPLANER, SVAR, LOGGAR, FEEDBACK)</Todo>
+        Uppgifterna sparas så länge du har ett konto. Skärmdumpar som bifogas feedback tas bort
+        automatiskt efter 12 månader.{" "}
+        <Todo>
+          JURIST: BEKRÄFTA 12 MÅNADER; RETENTIONSTIDER FÖR STUDIEPLANER, SVAR, LOGGAR OCH FEEDBACK
+        </Todo>
       </p>
     ),
   },

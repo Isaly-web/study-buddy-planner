@@ -116,5 +116,7 @@
   "account_confirm_button": "Radera allt",
   "account_deleted": "Dina uppgifter är raderade",
   "account_delete_failed": "Kunde inte radera dina uppgifter. Försök igen.",
-  "account_privacy_link": "Läs mer i integritetspolicyn"
+  "account_privacy_link": "Läs mer i integritetspolicyn",
+  "auth_age_confirm": "Jag är minst 13 år gammal",
+  "auth_age_required": "Du måste vara minst 13 år för att skapa konto."
 }
