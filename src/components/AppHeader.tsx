@@ -1,7 +1,14 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpenCheck, BarChart3, CalendarDays, LogOut, MessageSquare } from "lucide-react";
+import {
+  BookOpenCheck,
+  BarChart3,
+  CalendarDays,
+  LogOut,
+  MessageSquare,
+  UserRound,
+} from "lucide-react";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useTranslation } from "@/lib/i18n";
 
@@ -37,6 +44,12 @@ export function AppHeader() {
             <Button variant="ghost" size="sm">
               <MessageSquare className="h-4 w-4" />
               <span className="ml-1.5 hidden sm:inline">{t("feedback")}</span>
+            </Button>
+          </Link>
+          <Link to="/account">
+            <Button variant="ghost" size="sm">
+              <UserRound className="h-4 w-4" />
+              <span className="ml-1.5 hidden sm:inline">{t("account")}</span>
             </Button>
           </Link>
           <Button variant="ghost" size="sm" onClick={signOut}>
